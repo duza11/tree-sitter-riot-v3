@@ -18,6 +18,9 @@ dist/
 *.egg-info
 *.whl
 
+# Nix artifacts
+.direnv/
+
 # C artifacts
 *.a
 *.so
