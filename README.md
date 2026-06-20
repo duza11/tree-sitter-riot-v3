@@ -6,6 +6,7 @@ Riot.js v3 `.tag` grammar for [tree-sitter](https://tree-sitter.github.io/tree-s
 
 - Riot v3 component files with one or more top-level components.
 - Template expressions in text and attributes, including braces in JavaScript strings, template literals, regular expressions, and comments.
+- Riot-specific `each` expressions and class shorthand expressions as dedicated syntax nodes.
 - HTML-like normal, void, and self-closing elements.
 - Unwrapped component JavaScript used by Riot v3.
 - `script` raw text with JavaScript injection.

@@ -17,6 +17,8 @@ module.exports = grammar({
     $.raw_text,
     $.component_script,
     $.riot_expression_text,
+    $.riot_each_expression_text,
+    $.riot_class_expression_text,
     $._scss_style_tag_name,
     $._css_style_tag_name,
     $._script_start_tag_name,
@@ -71,21 +73,21 @@ module.exports = grammar({
     self_closing_element: $ => seq(
       '<',
       field('name', alias(choice($._start_tag_name, $._void_start_tag_name), $.tag_name)),
-      repeat($.attribute),
+      repeat($._attribute),
       '/>',
     ),
 
     void_element: $ => seq(
       '<',
       field('name', alias($._void_start_tag_name, $.tag_name)),
-      repeat($.attribute),
+      repeat($._attribute),
       '>',
     ),
 
     start_tag: $ => seq(
       '<',
       field('name', alias($._start_tag_name, $.tag_name)),
-      repeat($.attribute),
+      repeat($._attribute),
       '>',
     ),
 
@@ -104,7 +106,7 @@ module.exports = grammar({
     script_start_tag: $ => seq(
       '<',
       field('name', alias($._script_start_tag_name, $.tag_name)),
-      repeat($.attribute),
+      repeat($._attribute),
       '>',
     ),
 
@@ -134,14 +136,14 @@ module.exports = grammar({
     scss_style_start_tag: $ => seq(
       '<',
       field('name', alias($._scss_style_tag_name, $.tag_name)),
-      repeat($.attribute),
+      repeat($._attribute),
       '>',
     ),
 
     css_style_start_tag: $ => seq(
       '<',
       field('name', alias($._css_style_tag_name, $.tag_name)),
-      repeat($.attribute),
+      repeat($._attribute),
       '>',
     ),
 
@@ -149,6 +151,25 @@ module.exports = grammar({
       '</',
       alias($.style_tag_name, $.tag_name),
       '>',
+    ),
+
+    _attribute: $ => choice(
+      $.each_attribute,
+      $.attribute,
+    ),
+
+    each_attribute: $ => seq(
+      field('name', alias('each', $.attribute_name)),
+      '=',
+      field('value', choice(
+        $.riot_each_expression,
+        $.quoted_riot_each_expression,
+      )),
+    ),
+
+    quoted_riot_each_expression: $ => choice(
+      seq('"', $.riot_each_expression, '"'),
+      seq('\'', $.riot_each_expression, '\''),
     ),
 
     attribute: $ => seq(
@@ -160,13 +181,14 @@ module.exports = grammar({
 
     attribute_value: $ => choice(
       $.quoted_attribute_value,
+      $.riot_class_expression,
       $.riot_expression,
       $.unquoted_attribute_value,
     ),
 
     quoted_attribute_value: $ => choice(
-      seq('"', repeat(choice($.riot_expression, $.quoted_attribute_text)), '"'),
-      seq('\'', repeat(choice($.riot_expression, $.single_quoted_attribute_text)), '\''),
+      seq('"', repeat(choice($.riot_class_expression, $.riot_expression, $.quoted_attribute_text)), '"'),
+      seq('\'', repeat(choice($.riot_class_expression, $.riot_expression, $.single_quoted_attribute_text)), '\''),
     ),
 
     quoted_attribute_text: _ => /[^"{}]+/,
@@ -190,6 +212,18 @@ module.exports = grammar({
     riot_expression: $ => seq(
       '{',
       optional($.riot_expression_text),
+      '}',
+    ),
+
+    riot_each_expression: $ => seq(
+      '{',
+      $.riot_each_expression_text,
+      '}',
+    ),
+
+    riot_class_expression: $ => seq(
+      '{',
+      $.riot_class_expression_text,
       '}',
     ),
 

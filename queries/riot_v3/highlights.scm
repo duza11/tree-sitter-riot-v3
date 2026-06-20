@@ -27,7 +27,13 @@
 
 ((attribute_name) @keyword.directive
   (#any-of? @keyword.directive
-    "if" "show" "hide" "each" "no-reorder" "riot-tag" "riot-src" "riot-value" "riot-style" "ref"))
+    "if" "show" "hide" "no-reorder" "riot-tag" "riot-src" "riot-value" "riot-style" "ref"))
+
+(each_attribute
+  name: (attribute_name) @keyword.repeat)
+
+(quoted_riot_each_expression
+  ["\"" "'"] @string)
 
 ((attribute_name) @function
   (#match? @function "^on[a-zA-Z]+$"))
@@ -39,3 +45,9 @@
 (riot_expression "{" @punctuation.bracket)
 (riot_expression "}" @punctuation.bracket)
 (riot_expression_text) @variable
+(riot_each_expression "{" @punctuation.bracket)
+(riot_each_expression "}" @punctuation.bracket)
+(riot_each_expression_text) @variable
+(riot_class_expression "{" @punctuation.bracket)
+(riot_class_expression "}" @punctuation.bracket)
+(riot_class_expression_text) @variable

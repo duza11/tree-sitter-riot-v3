@@ -74,6 +74,142 @@ Template expressions in text and attributes
       name: (tag_name))))
 
 ==================
+Riot each and class shorthand expressions
+==================
+
+<riot-directives>
+  <ul>
+    <li each={ items } class={ completed: done }>{ title }</li>
+    <li each="{ item, i in items }" class="{ active: item.active, first: i === 0 }"></li>
+    <li each={ item in items } class={ item.active ? 'active' : '' }></li>
+    <li class={ classes }></li>
+    <li class={{ active: isActive }}></li>
+    <li class={ selected: item.active ? yes : no, hidden: item.hidden }></li>
+    <li class={ getClass(':') }></li>
+    <li data-state={ ready: isReady }></li>
+  </ul>
+</riot-directives>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (riot_each_expression
+                  (riot_each_expression_text)))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (riot_class_expression
+                    (riot_class_expression_text)))))
+            (riot_expression
+              (riot_expression_text))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (quoted_riot_each_expression
+                  (riot_each_expression
+                    (riot_each_expression_text))))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (quoted_attribute_value
+                    (riot_class_expression
+                      (riot_class_expression_text))))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (riot_each_expression
+                  (riot_each_expression_text)))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (riot_expression
+                    (riot_expression_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (riot_expression
+                    (riot_expression_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (riot_expression
+                    (riot_expression_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (riot_class_expression
+                    (riot_class_expression_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (riot_expression
+                    (riot_expression_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (riot_class_expression
+                    (riot_class_expression_text)))))
+            (end_tag
+              (tag_name))))
+        (end_tag
+          (tag_name))))
+    (end_tag
+      (tag_name))))
+
+==================
 Braces in JavaScript lexical constructs
 ==================
 

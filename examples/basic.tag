@@ -1,6 +1,9 @@
 <demo-widget>
   <p if={ visible } onclick="toggle">{ message }</p>
   <input value={ name } />
+  <ul>
+    <li each={ item, i in items } class={ active: item.active }>{ i }: { item.name }</li>
+  </ul>
 
   <style type="scss">
     $color: red;
