@@ -2,9 +2,9 @@ ifeq ($(OS),Windows_NT)
 $(error Windows is not supported)
 endif
 
-LANGUAGE_NAME := tree-sitter-html
-HOMEPAGE_URL := https://github.com/tree-sitter/tree-sitter-html
-VERSION := 0.23.2
+LANGUAGE_NAME := tree-sitter-riot-v3
+HOMEPAGE_URL := https://github.com/duza11/tree-sitter-riot-v3
+VERSION := 0.1.0
 
 # repository
 SRC_DIR := src
@@ -66,7 +66,7 @@ $(LANGUAGE_NAME).pc: bindings/c/$(LANGUAGE_NAME).pc.in
 		-e 's|@CMAKE_INSTALL_PREFIX@|$(PREFIX)|' $< > $@
 
 $(PARSER): $(SRC_DIR)/grammar.json
-	$(TS) generate $^
+	$(TS) generate --abi=14 $^
 
 install: all
 	install -d '$(DESTDIR)$(INCLUDEDIR)'/tree_sitter '$(DESTDIR)$(PCLIBDIR)' '$(DESTDIR)$(LIBDIR)'

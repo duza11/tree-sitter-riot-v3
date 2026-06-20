@@ -1,7 +1,5 @@
 /**
- * @file HTML grammar for tree-sitter
- * @author Max Brunsfeld <maxbrunsfeld@gmail.com>
- * @author Amaan Qureshi <amaanq12@gmail.com>
+ * @file Riot.js v3 grammar for tree-sitter
  * @license MIT
  */
 
@@ -9,99 +7,100 @@
 // @ts-check
 
 module.exports = grammar({
-  name: 'html',
+  name: 'riot_v3',
 
-  extras: $ => [
-    $.comment,
-    /\s+/,
+  extras: _ => [
+    /[\s\u3000]+/,
   ],
 
   externals: $ => [
-    $._start_tag_name,
+    $.raw_text,
+    $.component_script,
+    $.riot_expression_text,
+    $.riot_each_expression_text,
+    $.riot_class_expression_text,
+    $._scss_style_tag_name,
+    $._css_style_tag_name,
     $._script_start_tag_name,
-    $._style_start_tag_name,
+    $._start_tag_name,
+    $._void_start_tag_name,
     $._end_tag_name,
     $.erroneous_end_tag_name,
-    '/>',
     $._implicit_end_tag,
-    $.raw_text,
-    $.comment,
+    '/>',
   ],
 
   rules: {
-    document: $ => repeat($._node),
+    source_file: $ => repeat($._top_level_node),
 
-    doctype: $ => seq(
-      '<!',
-      alias($._doctype, 'doctype'),
-      /[^>]+/,
-      '>',
+    _top_level_node: $ => choice(
+      $.component,
+      $.comment,
+      $.erroneous_end_tag,
+      $.text,
     ),
 
-    _doctype: _ => /[Dd][Oo][Cc][Tt][Yy][Pp][Ee]/,
+    component: $ => seq(
+      $.start_tag,
+      repeat($._component_child),
+      optional($.component_script),
+      $.end_tag,
+    ),
 
-    _node: $ => choice(
-      $.doctype,
-      $.entity,
-      $.text,
-      $.element,
+    _component_child: $ => choice(
       $.script_element,
-      $.style_element,
+      $._style_element,
+      $.comment,
       $.erroneous_end_tag,
+      $.element,
+    ),
+
+    _template_node: $ => choice(
+      $.script_element,
+      $._style_element,
+      $.comment,
+      $.erroneous_end_tag,
+      $.element,
+      $.riot_expression,
+      $.text,
     ),
 
     element: $ => choice(
-      seq(
-        $.start_tag,
-        repeat($._node),
-        choice($.end_tag, $._implicit_end_tag),
-      ),
-      $.self_closing_tag,
+      $.normal_element,
+      $.self_closing_element,
+      $.void_element,
     ),
 
-    script_element: $ => seq(
-      alias($.script_start_tag, $.start_tag),
-      optional($.raw_text),
-      $.end_tag,
+    normal_element: $ => seq(
+      $.start_tag,
+      repeat($._template_node),
+      choice($.end_tag, $._implicit_end_tag),
     ),
 
-    style_element: $ => seq(
-      alias($.style_start_tag, $.start_tag),
-      optional($.raw_text),
-      $.end_tag,
+    self_closing_element: $ => seq(
+      '<',
+      field('name', alias(choice($._start_tag_name, $._void_start_tag_name), $.tag_name)),
+      repeat($._attribute),
+      '/>',
+    ),
+
+    void_element: $ => seq(
+      '<',
+      field('name', alias($._void_start_tag_name, $.tag_name)),
+      repeat($._attribute),
+      '>',
     ),
 
     start_tag: $ => seq(
       '<',
-      alias($._start_tag_name, $.tag_name),
-      repeat($.attribute),
+      field('name', alias($._start_tag_name, $.tag_name)),
+      repeat($._attribute),
       '>',
-    ),
-
-    script_start_tag: $ => seq(
-      '<',
-      alias($._script_start_tag_name, $.tag_name),
-      repeat($.attribute),
-      '>',
-    ),
-
-    style_start_tag: $ => seq(
-      '<',
-      alias($._style_start_tag_name, $.tag_name),
-      repeat($.attribute),
-      '>',
-    ),
-
-    self_closing_tag: $ => seq(
-      '<',
-      alias($._start_tag_name, $.tag_name),
-      repeat($.attribute),
-      '/>',
     ),
 
     end_tag: $ => seq(
       '</',
-      alias($._end_tag_name, $.tag_name),
+      field('name', alias($._end_tag_name, $.tag_name)),
       '>',
     ),
 
@@ -111,31 +110,136 @@ module.exports = grammar({
       '>',
     ),
 
-    attribute: $ => seq(
-      $.attribute_name,
-      optional(seq(
-        '=',
-        choice(
-          $.attribute_value,
-          $.quoted_attribute_value,
-        ),
+    script_element: $ => seq(
+      $.script_start_tag,
+      optional($.raw_text),
+      $.script_end_tag,
+    ),
+
+    script_start_tag: $ => seq(
+      '<',
+      field('name', alias($._script_start_tag_name, $.tag_name)),
+      repeat($._attribute),
+      '>',
+    ),
+
+    script_end_tag: $ => seq(
+      '</',
+      alias($._end_tag_name, $.tag_name),
+      '>',
+    ),
+
+    _style_element: $ => choice(
+      $.scss_style_element,
+      $.css_style_element,
+    ),
+
+    scss_style_element: $ => seq(
+      $.scss_style_start_tag,
+      optional($.raw_text),
+      $.style_end_tag,
+    ),
+
+    css_style_element: $ => seq(
+      $.css_style_start_tag,
+      optional($.raw_text),
+      $.style_end_tag,
+    ),
+
+    scss_style_start_tag: $ => seq(
+      '<',
+      field('name', alias($._scss_style_tag_name, $.tag_name)),
+      repeat($._attribute),
+      '>',
+    ),
+
+    css_style_start_tag: $ => seq(
+      '<',
+      field('name', alias($._css_style_tag_name, $.tag_name)),
+      repeat($._attribute),
+      '>',
+    ),
+
+    style_end_tag: $ => seq(
+      '</',
+      alias($._end_tag_name, $.tag_name),
+      '>',
+    ),
+
+    _attribute: $ => choice(
+      $.each_attribute,
+      $.attribute,
+    ),
+
+    each_attribute: $ => seq(
+      field('name', alias('each', $.attribute_name)),
+      '=',
+      field('value', choice(
+        $.riot_each_expression,
+        $.quoted_riot_each_expression,
       )),
     ),
 
-    attribute_name: _ => /[^<>"'/=\s]+/,
-
-    attribute_value: _ => /[^<>"'=\s]+/,
-
-    // An entity can be named, numeric (decimal), or numeric (hexacecimal). The
-    // longest entity name is 29 characters long, and the HTML spec says that
-    // no more will ever be added.
-    entity: _ => /&(#([xX][0-9a-fA-F]{1,6}|[0-9]{1,5})|[A-Za-z]{1,30});?/,
-
-    quoted_attribute_value: $ => choice(
-      seq('\'', optional(alias(/[^']+/, $.attribute_value)), '\''),
-      seq('"', optional(alias(/[^"]+/, $.attribute_value)), '"'),
+    quoted_riot_each_expression: $ => choice(
+      seq('"', $.riot_each_expression, '"'),
+      seq('\'', $.riot_each_expression, '\''),
     ),
 
-    text: _ => /[^<>&\s]([^<>&]*[^<>&\s])?/,
+    attribute: $ => seq(
+      $.attribute_name,
+      optional(seq('=', $.attribute_value)),
+    ),
+
+    attribute_name: _ => /[A-Za-z_:][A-Za-z0-9_:.-]*/,
+
+    attribute_value: $ => choice(
+      $.quoted_attribute_value,
+      $.riot_class_expression,
+      $.riot_expression,
+      $.unquoted_attribute_value,
+    ),
+
+    quoted_attribute_value: $ => choice(
+      seq('"', repeat(choice($.riot_class_expression, $.riot_expression, $.quoted_attribute_text)), '"'),
+      seq('\'', repeat(choice($.riot_class_expression, $.riot_expression, $.single_quoted_attribute_text)), '\''),
+    ),
+
+    quoted_attribute_text: _ => /[^"{}]+/,
+
+    single_quoted_attribute_text: _ => /[^'{}]+/,
+
+    unquoted_attribute_value: _ => token(prec(-1, /[^\s<>'"={}]+/)),
+
+    tag_name: _ => token(prec(1, /[A-Za-z][A-Za-z0-9_:.-]*/)),
+
+    script_tag_name: _ => token(prec(10, /[sS][cC][rR][iI][pP][tT]/)),
+
+    style_tag_name: _ => token(prec(10, /[sS][tT][yY][lL][eE]/)),
+
+    comment: _ => token(seq(
+      '<!--',
+      optional(/[^-]*(-[^->][^-]*)*/),
+      '-->',
+    )),
+
+    riot_expression: $ => seq(
+      '{',
+      optional($.riot_expression_text),
+      '}',
+    ),
+
+    riot_each_expression: $ => seq(
+      '{',
+      $.riot_each_expression_text,
+      '}',
+    ),
+
+    riot_class_expression: $ => seq(
+      '{',
+      $.riot_class_expression_text,
+      '}',
+    ),
+
+    text: _ => token(prec(-1, /[^<{\s\u3000][^<{]*/)),
   },
 });

@@ -18,6 +18,9 @@ dist/
 *.egg-info
 *.whl
 
+# Nix artifacts
+.direnv/
+
 # C artifacts
 *.a
 *.so
@@ -38,3 +41,5 @@ dist/
 *.tar.gz
 *.tgz
 *.zip
+
+AGENTS.md

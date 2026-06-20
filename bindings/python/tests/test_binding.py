@@ -8,4 +8,4 @@ class TestLanguage(TestCase):
         try:
             tree_sitter.Language(tree_sitter_html.language())
         except Exception:
-            self.fail("Error loading HTML grammar")
+            self.fail("Error loading Riot.js v3 grammar")

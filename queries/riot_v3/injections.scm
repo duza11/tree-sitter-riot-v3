@@ -1,0 +1,19 @@
+(script_element
+  (raw_text) @injection.content
+  (#set! injection.language "javascript"))
+
+(component
+  (component_script) @injection.content
+  (#set! injection.language "javascript"))
+
+(scss_style_element
+  (raw_text) @injection.content
+  (#set! injection.language "scss"))
+
+(css_style_element
+  (raw_text) @injection.content
+  (#set! injection.language "css"))
+
+(riot_expression
+  (riot_expression_text) @injection.content
+  (#set! injection.language "javascript"))
