@@ -4,10 +4,23 @@ on:
   push:
     branches: [master]
     paths:
+      - .github/workflows/lint.yml
+      - eslint.config.mjs
       - grammar.js
+      - package.json
+      - package-lock.json
   pull_request:
+    branches: [master]
     paths:
+      - .github/workflows/lint.yml
+      - eslint.config.mjs
       - grammar.js
+      - package.json
+      - package-lock.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -19,7 +32,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           cache: npm
-          node-version: ${{vars.NODE_VERSION}}
+          node-version: 22
       - name: Install modules
         run: npm ci --legacy-peer-deps
       - name: Run ESLint

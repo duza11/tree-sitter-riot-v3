@@ -14,61 +14,35 @@
         {
           "type": "attribute_value",
           "named": true
-        },
+        }
+      ]
+    }
+  },
+  {
+    "type": "attribute_value",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
         {
           "type": "quoted_attribute_value",
           "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "doctype",
-    "named": true,
-    "fields": {}
-  },
-  {
-    "type": "document",
-    "named": true,
-    "root": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
+        },
         {
-          "type": "doctype",
+          "type": "riot_expression",
           "named": true
         },
         {
-          "type": "element",
-          "named": true
-        },
-        {
-          "type": "entity",
-          "named": true
-        },
-        {
-          "type": "erroneous_end_tag",
-          "named": true
-        },
-        {
-          "type": "script_element",
-          "named": true
-        },
-        {
-          "type": "style_element",
-          "named": true
-        },
-        {
-          "type": "text",
+          "type": "unquoted_attribute_value",
           "named": true
         }
       ]
     }
   },
   {
-    "type": "element",
+    "type": "component",
     "named": true,
     "fields": {},
     "children": {
@@ -76,7 +50,15 @@
       "required": true,
       "types": [
         {
-          "type": "doctype",
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "component_script",
+          "named": true
+        },
+        {
+          "type": "css_style_element",
           "named": true
         },
         {
@@ -88,11 +70,134 @@
           "named": true
         },
         {
-          "type": "entity",
+          "type": "script_element",
           "named": true
         },
         {
-          "type": "erroneous_end_tag",
+          "type": "scss_style_element",
+          "named": true
+        },
+        {
+          "type": "start_tag",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "css_style_element",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "css_style_start_tag",
+          "named": true
+        },
+        {
+          "type": "raw_text",
+          "named": true
+        },
+        {
+          "type": "style_end_tag",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "css_style_start_tag",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "element",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "normal_element",
+          "named": true
+        },
+        {
+          "type": "self_closing_element",
+          "named": true
+        },
+        {
+          "type": "void_element",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "end_tag",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "normal_element",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "css_style_element",
+          "named": true
+        },
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "end_tag",
+          "named": true
+        },
+        {
+          "type": "riot_expression",
           "named": true
         },
         {
@@ -100,15 +205,11 @@
           "named": true
         },
         {
-          "type": "self_closing_tag",
+          "type": "scss_style_element",
           "named": true
         },
         {
           "type": "start_tag",
-          "named": true
-        },
-        {
-          "type": "style_element",
           "named": true
         },
         {
@@ -119,37 +220,30 @@
     }
   },
   {
-    "type": "end_tag",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "tag_name",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "erroneous_end_tag",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "erroneous_end_tag_name",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "quoted_attribute_value",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "quoted_attribute_text",
+          "named": true
+        },
+        {
+          "type": "riot_expression",
+          "named": true
+        },
+        {
+          "type": "single_quoted_attribute_text",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "riot_expression",
     "named": true,
     "fields": {},
     "children": {
@@ -157,7 +251,7 @@
       "required": false,
       "types": [
         {
-          "type": "attribute_value",
+          "type": "riot_expression_text",
           "named": true
         }
       ]
@@ -172,22 +266,63 @@
       "required": true,
       "types": [
         {
-          "type": "end_tag",
-          "named": true
-        },
-        {
           "type": "raw_text",
           "named": true
         },
         {
-          "type": "start_tag",
+          "type": "script_end_tag",
+          "named": true
+        },
+        {
+          "type": "script_start_tag",
           "named": true
         }
       ]
     }
   },
   {
-    "type": "self_closing_tag",
+    "type": "script_end_tag",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "tag_name",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "script_start_tag",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "scss_style_element",
     "named": true,
     "fields": {},
     "children": {
@@ -195,11 +330,91 @@
       "required": true,
       "types": [
         {
-          "type": "attribute",
+          "type": "raw_text",
           "named": true
         },
         {
-          "type": "tag_name",
+          "type": "scss_style_start_tag",
+          "named": true
+        },
+        {
+          "type": "style_end_tag",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "scss_style_start_tag",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "self_closing_element",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "component",
+          "named": true
+        },
+        {
+          "type": "text",
           "named": true
         }
       ]
@@ -208,15 +423,37 @@
   {
     "type": "start_tag",
     "named": true,
-    "fields": {},
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "attribute",
           "named": true
-        },
+        }
+      ]
+    }
+  },
+  {
+    "type": "style_end_tag",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
         {
           "type": "tag_name",
           "named": true
@@ -225,23 +462,26 @@
     }
   },
   {
-    "type": "style_element",
+    "type": "void_element",
     "named": true,
-    "fields": {},
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
-          "type": "end_tag",
-          "named": true
-        },
-        {
-          "type": "raw_text",
-          "named": true
-        },
-        {
-          "type": "start_tag",
+          "type": "attribute",
           "named": true
         }
       ]
@@ -264,10 +504,6 @@
     "named": false
   },
   {
-    "type": "<!",
-    "named": false
-  },
-  {
     "type": "</",
     "named": false
   },
@@ -284,27 +520,27 @@
     "named": true
   },
   {
-    "type": "attribute_value",
-    "named": true
-  },
-  {
     "type": "comment",
     "named": true
   },
   {
-    "type": "doctype",
-    "named": false
-  },
-  {
-    "type": "entity",
+    "type": "component_script",
     "named": true
   },
   {
-    "type": "erroneous_end_tag_name",
+    "type": "quoted_attribute_text",
     "named": true
   },
   {
     "type": "raw_text",
+    "named": true
+  },
+  {
+    "type": "riot_expression_text",
+    "named": true
+  },
+  {
+    "type": "single_quoted_attribute_text",
     "named": true
   },
   {
@@ -314,5 +550,17 @@
   {
     "type": "text",
     "named": true
+  },
+  {
+    "type": "unquoted_attribute_value",
+    "named": true
+  },
+  {
+    "type": "{",
+    "named": false
+  },
+  {
+    "type": "}",
+    "named": false
   }
 ]

@@ -1,4 +1,4 @@
-module github.com/tree-sitter/tree-sitter-html
+module github.com/duza11/tree-sitter-riot-v3
 
 go 1.22
 

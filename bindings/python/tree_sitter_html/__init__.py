@@ -1,4 +1,4 @@
-"""HTML grammar for tree-sitter"""
+"""Riot.js v3 grammar for tree-sitter"""
 
 from importlib.resources import files as _files
 

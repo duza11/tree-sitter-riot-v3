@@ -4,18 +4,41 @@ on:
   push:
     branches: [master]
     paths:
+      - .github/workflows/ci.yml
       - grammar.js
       - src/**
       - test/**
+      - examples/**/*.tag
+      - queries/**
       - bindings/**
       - binding.gyp
+      - tree-sitter.json
+      - package.json
+      - Cargo.toml
+      - go.mod
+      - pyproject.toml
+      - Package.swift
   pull_request:
+    branches: [master]
     paths:
+      - .github/workflows/ci.yml
       - grammar.js
       - src/**
       - test/**
+      - examples/**/*.tag
+      - queries/**
       - bindings/**
       - binding.gyp
+      - tree-sitter.json
+      - package.json
+      - Cargo.toml
+      - go.mod
+      - pyproject.toml
+      - Package.swift
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{github.workflow}}-${{github.ref}}
@@ -45,4 +68,10 @@ jobs:
       - name: Parse examples
         uses: tree-sitter/parse-action@v4
         with:
-          files: examples/*
+          files: examples/*.tag
+      - name: Validate queries
+        if: runner.os == 'Linux'
+        run: |
+          tree-sitter query -q -p . queries/riot_v3/highlights.scm examples/basic.tag
+          tree-sitter query -q -p . queries/riot_v3/injections.scm examples/basic.tag
+          tree-sitter query -q -p . queries/riot_v3/folds.scm examples/basic.tag

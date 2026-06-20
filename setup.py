@@ -10,7 +10,7 @@ class Build(build):
     def run(self):
         if isdir("queries"):
             dest = join(self.build_lib, "tree_sitter_html", "queries")
-            self.copy_tree("queries", dest)
+            self.copy_tree(join("queries", "riot_v3"), dest)
         super().run()
 
 

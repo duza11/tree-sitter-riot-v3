@@ -1,36 +1,20 @@
 {
-  "name": "tree-sitter-html",
-  "version": "0.23.2",
-  "description": "HTML grammar for tree-sitter",
-  "repository": "https://github.com/tree-sitter/tree-sitter-html",
+  "name": "tree-sitter-riot-v3",
+  "version": "0.1.0",
+  "description": "Riot.js v3 grammar for tree-sitter",
+  "repository": "https://github.com/duza11/tree-sitter-riot-v3",
   "license": "MIT",
   "author": {
-    "name": "Max Brunsfeld",
-    "email": "maxbrunsfeld@gmail.com"
+      "name": "duza11"
   },
-  "contributors": [
-    {
-      "name": "Ashi Krishnan",
-      "email": "queerviolet@github.com"
-    },
-    {
-      "name": "Amaan Qureshi",
-      "email": "amaanq12@gmail.com"
-    }
-  ],
-  "maintainers": [
-    {
-      "name": "Amaan Qureshi",
-      "email": "amaanq12@gmail.com"
-    }
-  ],
   "main": "bindings/node",
   "types": "bindings/node",
   "keywords": [
     "incremental",
     "parsing",
     "tree-sitter",
-    "html"
+    "riot",
+    "riotjs"
   ],
   "files": [
     "grammar.js",
@@ -38,7 +22,7 @@
     "binding.gyp",
     "prebuilds/**",
     "bindings/node/*",
-    "queries/*",
+    "queries/riot_v3/*",
     "src/**",
     "*.wasm"
   ],

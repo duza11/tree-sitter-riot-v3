@@ -1,21 +1,54 @@
-# tree-sitter-html
+# tree-sitter-riot-v3
 
-[![CI][ci]](https://github.com/tree-sitter/tree-sitter-html/actions/workflows/ci.yml)
-[![discord][discord]](https://discord.gg/w7nTvsVJhm)
-[![matrix][matrix]](https://matrix.to/#/#tree-sitter-chat:matrix.org)
-[![crates][crates]](https://crates.io/crates/tree-sitter-html)
-[![npm][npm]](https://www.npmjs.com/package/tree-sitter-html)
-[![pypi][pypi]](https://pypi.org/project/tree-sitter-html)
+Riot.js v3 `.tag` grammar for [tree-sitter](https://tree-sitter.github.io/tree-sitter/).
 
-HTML grammar for [tree-sitter](https://github.com/tree-sitter/tree-sitter).
+## Features
 
-References
+- Riot v3 component files with one or more top-level components.
+- Template expressions in text and attributes, including braces in JavaScript strings, template literals, regular expressions, and comments.
+- HTML-like normal, void, and self-closing elements.
+- Unwrapped component JavaScript used by Riot v3.
+- `script` raw text with JavaScript injection.
+- `style` raw text with CSS injection.
+- `style type="scss"` raw text with SCSS injection.
+- Neovim queries under `queries/riot_v3/`.
 
-- [The HTML5 Spec](https://www.w3.org/TR/html5/syntax.html)
+## Neovim setup
 
-[ci]: https://img.shields.io/github/actions/workflow/status/tree-sitter/tree-sitter-html/ci.yml?logo=github&label=CI
-[discord]: https://img.shields.io/discord/1063097320771698699?logo=discord&label=discord
-[matrix]: https://img.shields.io/matrix/tree-sitter-chat%3Amatrix.org?logo=matrix&label=matrix
-[npm]: https://img.shields.io/npm/v/tree-sitter-html?logo=npm
-[crates]: https://img.shields.io/crates/v/tree-sitter-html?logo=rust
-[pypi]: https://img.shields.io/pypi/v/tree-sitter-html?logo=pypi&logoColor=ffd242
+Example for `nvim-treesitter`:
+
+```lua
+local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+
+parser_config.riot_v3 = {
+  install_info = {
+    url = "/path/to/tree-sitter-riot-v3",
+    files = { "src/parser.c", "src/scanner.c" },
+  },
+  filetype = "riot",
+}
+
+vim.filetype.add({
+  extension = {
+    tag = "riot",
+  },
+})
+```
+
+Then copy or expose this repository on `runtimepath` so Neovim can find:
+
+```text
+queries/riot_v3/highlights.scm
+queries/riot_v3/injections.scm
+queries/riot_v3/folds.scm
+```
+
+If your Neovim setup uses parser name as filetype directly, map `.tag` to `riot_v3` instead.
+
+## Development
+
+```sh
+tree-sitter generate
+tree-sitter test
+tree-sitter parse examples/basic.tag
+```

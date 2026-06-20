@@ -4,10 +4,21 @@ on:
   push:
     branches: [master]
     paths:
+      - .github/workflows/fuzz.yml
+      - grammar.js
+      - src/parser.c
       - src/scanner.c
   pull_request:
+    branches: [master]
     paths:
+      - .github/workflows/fuzz.yml
+      - grammar.js
+      - src/parser.c
       - src/scanner.c
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   fuzz:

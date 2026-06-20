@@ -3,10 +3,10 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tree-sitter-html"
-description = "HTML grammar for tree-sitter"
-version = "0.23.2"
-keywords = ["incremental", "parsing", "tree-sitter", "html"]
+name = "tree-sitter-riot-v3"
+description = "Riot.js v3 grammar for tree-sitter"
+version = "0.1.0"
+keywords = ["incremental", "parsing", "tree-sitter", "riot", "riotjs"]
 classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
@@ -15,15 +15,14 @@ classifiers = [
   "Typing :: Typed",
 ]
 authors = [
-  { name = "Max Brunsfeld", email = "maxbrunsfeld@gmail.com" },
-  { name = "Amaan Qureshi", email = "amaanq12@gmail.com" },
+  { name = "duza11" },
 ]
 requires-python = ">=3.9"
 license.text = "MIT"
 readme = "README.md"
 
 [project.urls]
-Homepage = "https://github.com/tree-sitter/tree-sitter-html"
+Homepage = "https://github.com/duza11/tree-sitter-riot-v3"
 
 [project.optional-dependencies]
 core = ["tree-sitter~=0.22"]
