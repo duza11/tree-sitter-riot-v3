@@ -19,6 +19,9 @@
 (css_style_start_tag ">" @punctuation.bracket)
 (style_end_tag "</" @punctuation.bracket)
 (style_end_tag ">" @punctuation.bracket)
+(erroneous_end_tag "</" @punctuation.bracket)
+(erroneous_end_tag ">" @punctuation.bracket)
+(erroneous_end_tag_name) @tag.error
 
 ; Attributes
 (attribute_name) @attribute

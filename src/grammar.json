@@ -22,6 +22,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "erroneous_end_tag"
+        },
+        {
+          "type": "SYMBOL",
           "name": "text"
         }
       ]
@@ -75,6 +79,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "erroneous_end_tag"
+        },
+        {
+          "type": "SYMBOL",
           "name": "element"
         }
       ]
@@ -93,6 +101,10 @@
         {
           "type": "SYMBOL",
           "name": "comment"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "erroneous_end_tag"
         },
         {
           "type": "SYMBOL",
@@ -140,8 +152,17 @@
           }
         },
         {
-          "type": "SYMBOL",
-          "name": "end_tag"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "end_tag"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_implicit_end_tag"
+            }
+          ]
         }
       ]
     },
@@ -264,9 +285,31 @@
           "type": "FIELD",
           "name": "name",
           "content": {
-            "type": "SYMBOL",
-            "name": "tag_name"
+            "type": "ALIAS",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_end_tag_name"
+            },
+            "named": true,
+            "value": "tag_name"
           }
+        },
+        {
+          "type": "STRING",
+          "value": ">"
+        }
+      ]
+    },
+    "erroneous_end_tag": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "</"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "erroneous_end_tag_name"
         },
         {
           "type": "STRING",
@@ -343,7 +386,7 @@
           "type": "ALIAS",
           "content": {
             "type": "SYMBOL",
-            "name": "script_tag_name"
+            "name": "_end_tag_name"
           },
           "named": true,
           "value": "tag_name"
@@ -494,7 +537,7 @@
           "type": "ALIAS",
           "content": {
             "type": "SYMBOL",
-            "name": "style_tag_name"
+            "name": "_end_tag_name"
           },
           "named": true,
           "value": "tag_name"
@@ -921,6 +964,22 @@
     {
       "type": "SYMBOL",
       "name": "_void_start_tag_name"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_end_tag_name"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "erroneous_end_tag_name"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_implicit_end_tag"
+    },
+    {
+      "type": "STRING",
+      "value": "/>"
     }
   ],
   "inline": [],

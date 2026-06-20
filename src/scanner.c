@@ -1,4 +1,5 @@
 #include "tree_sitter/parser.h"
+#include "tree_sitter/array.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -16,24 +17,103 @@ enum TokenType {
     SCRIPT_START_TAG_NAME,
     START_TAG_NAME,
     VOID_START_TAG_NAME,
+    END_TAG_NAME,
+    ERRONEOUS_END_TAG_NAME,
+    IMPLICIT_END_TAG,
+    SELF_CLOSING_TAG_DELIMITER,
 };
 
+typedef Array(char) TagName;
+typedef Array(TagName) TagStack;
+
+typedef struct {
+    TagStack tags;
+} Scanner;
+
+static void clear_tags(Scanner *scanner) {
+    for (unsigned i = 0; i < scanner->tags.size; i++) {
+        array_delete(&scanner->tags.contents[i]);
+    }
+    array_clear(&scanner->tags);
+}
+
+static void push_tag(Scanner *scanner, const char *name) {
+    TagName tag = array_new();
+    unsigned length = (unsigned)strlen(name);
+    array_reserve(&tag, length);
+
+    for (unsigned i = 0; i < length; i++) {
+        array_push(&tag, name[i]);
+    }
+
+    array_push(&scanner->tags, tag);
+}
+
+static void pop_tag(Scanner *scanner) {
+    if (scanner->tags.size == 0) {
+        return;
+    }
+
+    TagName tag = array_pop(&scanner->tags);
+    array_delete(&tag);
+}
+
+static bool tag_name_equals(const TagName *tag, const char *name) {
+    unsigned length = (unsigned)strlen(name);
+    return tag->size == length && memcmp(tag->contents, name, length) == 0;
+}
+
 void *tree_sitter_riot_v3_external_scanner_create(void) {
-    return NULL;
+    Scanner *scanner = ts_calloc(1, sizeof(Scanner));
+    scanner->tags = (TagStack)array_new();
+    return scanner;
 }
 
 void tree_sitter_riot_v3_external_scanner_destroy(void *payload) {
-    (void)payload;
+    Scanner *scanner = payload;
+    clear_tags(scanner);
+    array_delete(&scanner->tags);
+    ts_free(scanner);
 }
 
 void tree_sitter_riot_v3_external_scanner_reset(void *payload) {
-    (void)payload;
+    clear_tags(payload);
 }
 
 unsigned tree_sitter_riot_v3_external_scanner_serialize(void *payload, char *buffer) {
-    (void)payload;
-    (void)buffer;
-    return 0;
+    Scanner *scanner = payload;
+    uint16_t tag_count = scanner->tags.size > UINT16_MAX ? UINT16_MAX : (uint16_t)scanner->tags.size;
+    uint16_t serialized_count = 0;
+    unsigned required_size = sizeof(tag_count) + sizeof(serialized_count);
+
+    for (unsigned i = tag_count; i > 0; i--) {
+        unsigned length = scanner->tags.contents[i - 1].size;
+        if (length > UINT8_MAX) {
+            length = UINT8_MAX;
+        }
+        if (required_size + 1 + length > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) {
+            break;
+        }
+        required_size += 1 + length;
+        serialized_count++;
+    }
+
+    unsigned size = 0;
+    memcpy(&buffer[size], &tag_count, sizeof(tag_count));
+    size += sizeof(tag_count);
+    memcpy(&buffer[size], &serialized_count, sizeof(serialized_count));
+    size += sizeof(serialized_count);
+
+    unsigned start = tag_count - serialized_count;
+    for (unsigned i = start; i < tag_count; i++) {
+        TagName *tag = &scanner->tags.contents[i];
+        uint8_t length = tag->size > UINT8_MAX ? UINT8_MAX : (uint8_t)tag->size;
+        buffer[size++] = (char)length;
+        memcpy(&buffer[size], tag->contents, length);
+        size += length;
+    }
+
+    return size;
 }
 
 void tree_sitter_riot_v3_external_scanner_deserialize(
@@ -41,9 +121,43 @@ void tree_sitter_riot_v3_external_scanner_deserialize(
     const char *buffer,
     unsigned length
 ) {
-    (void)payload;
-    (void)buffer;
-    (void)length;
+    Scanner *scanner = payload;
+    clear_tags(scanner);
+
+    if (length < sizeof(uint16_t) * 2) {
+        return;
+    }
+
+    unsigned size = 0;
+    uint16_t tag_count = 0;
+    uint16_t serialized_count = 0;
+    memcpy(&tag_count, &buffer[size], sizeof(tag_count));
+    size += sizeof(tag_count);
+    memcpy(&serialized_count, &buffer[size], sizeof(serialized_count));
+    size += sizeof(serialized_count);
+
+    if (serialized_count > tag_count) {
+        serialized_count = tag_count;
+    }
+
+    for (unsigned i = 0; i < tag_count - serialized_count; i++) {
+        TagName placeholder = array_new();
+        array_push(&scanner->tags, placeholder);
+    }
+
+    for (unsigned i = 0; i < serialized_count && size < length; i++) {
+        uint8_t name_length = (uint8_t)buffer[size++];
+        if (size + name_length > length) {
+            break;
+        }
+
+        TagName tag = array_new();
+        array_reserve(&tag, name_length);
+        for (unsigned j = 0; j < name_length; j++) {
+            array_push(&tag, buffer[size++]);
+        }
+        array_push(&scanner->tags, tag);
+    }
 }
 
 static inline int lower(int c) {
@@ -457,21 +571,16 @@ static bool is_script_tag_name(const char *name) {
     return strcmp(name, "script") == 0;
 }
 
-static bool scan_remaining(TSLexer *lexer, const char *rest) {
-    for (unsigned i = 0; rest[i] != '\0'; i++) {
-        if (lower(lexer->lookahead) != rest[i]) {
-            return false;
-        }
-        lexer->advance(lexer, false);
-    }
-
-    return true;
-}
-
-static bool scan_script_or_style_end_tag(TSLexer *lexer) {
-    if (lexer->lookahead != '<') {
+static bool scan_expected_end_tag(Scanner *scanner, TSLexer *lexer) {
+    if (scanner->tags.size == 0 || lexer->lookahead != '<') {
         return false;
     }
+
+    TagName *expected = array_back(&scanner->tags);
+    if (expected->size == 0) {
+        return false;
+    }
+
     lexer->advance(lexer, false);
 
     if (lexer->lookahead != '/') {
@@ -479,32 +588,24 @@ static bool scan_script_or_style_end_tag(TSLexer *lexer) {
     }
     lexer->advance(lexer, false);
 
-    if (lower(lexer->lookahead) != 's') {
-        return false;
-    }
-    lexer->advance(lexer, false);
-
-    if (lower(lexer->lookahead) == 'c') {
+    for (unsigned i = 0; i < expected->size; i++) {
+        if (lower(lexer->lookahead) != expected->contents[i]) {
+            return false;
+        }
         lexer->advance(lexer, false);
-        return scan_remaining(lexer, "ript>");
     }
 
-    if (lower(lexer->lookahead) == 't') {
-        lexer->advance(lexer, false);
-        return scan_remaining(lexer, "yle>");
-    }
-
-    return false;
+    return !is_name_char(lexer->lookahead);
 }
 
-static bool scan_raw_text(TSLexer *lexer) {
+static bool scan_raw_text(Scanner *scanner, TSLexer *lexer) {
     bool has_content = false;
 
     while (!lexer->eof(lexer)) {
         if (lexer->lookahead == '<') {
             lexer->mark_end(lexer);
 
-            if (scan_script_or_style_end_tag(lexer)) {
+            if (scan_expected_end_tag(scanner, lexer)) {
                 if (!has_content) {
                     return false;
                 }
@@ -719,7 +820,11 @@ static bool scan_style_attrs_is_scss(TSLexer *lexer) {
     return is_scss;
 }
 
-static bool scan_tag_name(TSLexer *lexer, const bool *valid_symbols) {
+static bool scan_start_tag_name(
+    Scanner *scanner,
+    TSLexer *lexer,
+    const bool *valid_symbols
+) {
     if (
         !valid_symbols[SCSS_STYLE_TAG_NAME] &&
         !valid_symbols[CSS_STYLE_TAG_NAME] &&
@@ -751,16 +856,19 @@ static bool scan_tag_name(TSLexer *lexer, const bool *valid_symbols) {
         bool is_scss = scan_style_attrs_is_scss(lexer);
 
         if (is_scss && valid_symbols[SCSS_STYLE_TAG_NAME]) {
+            push_tag(scanner, name);
             lexer->result_symbol = SCSS_STYLE_TAG_NAME;
             return true;
         }
 
         if (!is_scss && valid_symbols[CSS_STYLE_TAG_NAME]) {
+            push_tag(scanner, name);
             lexer->result_symbol = CSS_STYLE_TAG_NAME;
             return true;
         }
 
         if (valid_symbols[START_TAG_NAME]) {
+            push_tag(scanner, name);
             lexer->result_symbol = START_TAG_NAME;
             return true;
         }
@@ -769,6 +877,7 @@ static bool scan_tag_name(TSLexer *lexer, const bool *valid_symbols) {
     }
 
     if (is_script_tag_name(name) && valid_symbols[SCRIPT_START_TAG_NAME]) {
+        push_tag(scanner, name);
         lexer->result_symbol = SCRIPT_START_TAG_NAME;
         return true;
     }
@@ -779,6 +888,7 @@ static bool scan_tag_name(TSLexer *lexer, const bool *valid_symbols) {
     }
 
     if (valid_symbols[START_TAG_NAME]) {
+        push_tag(scanner, name);
         lexer->result_symbol = START_TAG_NAME;
         return true;
     }
@@ -786,19 +896,130 @@ static bool scan_tag_name(TSLexer *lexer, const bool *valid_symbols) {
     return false;
 }
 
+static bool scan_end_tag_name(
+    Scanner *scanner,
+    TSLexer *lexer,
+    const bool *valid_symbols
+) {
+    if (!valid_symbols[END_TAG_NAME] && !valid_symbols[ERRONEOUS_END_TAG_NAME]) {
+        return false;
+    }
+
+    if (!is_name_char(lexer->lookahead)) {
+        return false;
+    }
+
+    char name[128];
+    unsigned len = 0;
+    while (!lexer->eof(lexer) && is_name_char(lexer->lookahead)) {
+        if (len + 1 < sizeof(name)) {
+            name[len++] = (char)lower(lexer->lookahead);
+        }
+        lexer->advance(lexer, false);
+    }
+    name[len] = '\0';
+    lexer->mark_end(lexer);
+
+    bool matches =
+        scanner->tags.size > 0 &&
+        tag_name_equals(array_back(&scanner->tags), name);
+
+    if (matches && valid_symbols[END_TAG_NAME]) {
+        pop_tag(scanner);
+        lexer->result_symbol = END_TAG_NAME;
+        return true;
+    }
+
+    if (!matches && valid_symbols[ERRONEOUS_END_TAG_NAME]) {
+        lexer->result_symbol = ERRONEOUS_END_TAG_NAME;
+        return true;
+    }
+
+    return false;
+}
+
+static bool scan_implicit_end_tag(Scanner *scanner, TSLexer *lexer) {
+    if (scanner->tags.size < 2 || lexer->lookahead != '<') {
+        return false;
+    }
+
+    lexer->mark_end(lexer);
+    lexer->advance(lexer, false);
+    if (lexer->lookahead != '/') {
+        return false;
+    }
+    lexer->advance(lexer, false);
+
+    char name[128];
+    unsigned len = 0;
+    while (!lexer->eof(lexer) && is_name_char(lexer->lookahead)) {
+        if (len + 1 < sizeof(name)) {
+            name[len++] = (char)lower(lexer->lookahead);
+        }
+        lexer->advance(lexer, false);
+    }
+    name[len] = '\0';
+
+    if (len == 0 || tag_name_equals(array_back(&scanner->tags), name)) {
+        return false;
+    }
+
+    for (unsigned i = scanner->tags.size - 1; i > 0; i--) {
+        if (tag_name_equals(&scanner->tags.contents[i - 1], name)) {
+            pop_tag(scanner);
+            lexer->result_symbol = IMPLICIT_END_TAG;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool scan_self_closing_tag_delimiter(Scanner *scanner, TSLexer *lexer) {
+    if (lexer->lookahead != '/') {
+        return false;
+    }
+
+    lexer->advance(lexer, false);
+    if (lexer->lookahead != '>') {
+        return false;
+    }
+
+    lexer->advance(lexer, false);
+    lexer->mark_end(lexer);
+    pop_tag(scanner);
+    lexer->result_symbol = SELF_CLOSING_TAG_DELIMITER;
+    return true;
+}
+
 bool tree_sitter_riot_v3_external_scanner_scan(
     void *payload,
     TSLexer *lexer,
     const bool *valid_symbols
 ) {
-    (void)payload;
+    Scanner *scanner = payload;
 
-    if (scan_tag_name(lexer, valid_symbols)) {
+    if (scan_start_tag_name(scanner, lexer, valid_symbols)) {
+        return true;
+    }
+
+    if (scan_end_tag_name(scanner, lexer, valid_symbols)) {
+        return true;
+    }
+
+    if (valid_symbols[IMPLICIT_END_TAG] && scan_implicit_end_tag(scanner, lexer)) {
+        return true;
+    }
+
+    if (
+        valid_symbols[SELF_CLOSING_TAG_DELIMITER] &&
+        scan_self_closing_tag_delimiter(scanner, lexer)
+    ) {
         return true;
     }
 
     if (valid_symbols[RAW_TEXT]) {
-        return scan_raw_text(lexer);
+        return scan_raw_text(scanner, lexer);
     }
 
     if (valid_symbols[COMPONENT_SCRIPT]) {

@@ -24,6 +24,10 @@ module.exports = grammar({
     $._script_start_tag_name,
     $._start_tag_name,
     $._void_start_tag_name,
+    $._end_tag_name,
+    $.erroneous_end_tag_name,
+    $._implicit_end_tag,
+    '/>',
   ],
 
   rules: {
@@ -32,6 +36,7 @@ module.exports = grammar({
     _top_level_node: $ => choice(
       $.component,
       $.comment,
+      $.erroneous_end_tag,
       $.text,
     ),
 
@@ -46,6 +51,7 @@ module.exports = grammar({
       $.script_element,
       $._style_element,
       $.comment,
+      $.erroneous_end_tag,
       $.element,
     ),
 
@@ -53,6 +59,7 @@ module.exports = grammar({
       $.script_element,
       $._style_element,
       $.comment,
+      $.erroneous_end_tag,
       $.element,
       $.riot_expression,
       $.text,
@@ -67,7 +74,7 @@ module.exports = grammar({
     normal_element: $ => seq(
       $.start_tag,
       repeat($._template_node),
-      $.end_tag,
+      choice($.end_tag, $._implicit_end_tag),
     ),
 
     self_closing_element: $ => seq(
@@ -93,7 +100,13 @@ module.exports = grammar({
 
     end_tag: $ => seq(
       '</',
-      field('name', $.tag_name),
+      field('name', alias($._end_tag_name, $.tag_name)),
+      '>',
+    ),
+
+    erroneous_end_tag: $ => seq(
+      '</',
+      $.erroneous_end_tag_name,
       '>',
     ),
 
@@ -112,7 +125,7 @@ module.exports = grammar({
 
     script_end_tag: $ => seq(
       '</',
-      alias($.script_tag_name, $.tag_name),
+      alias($._end_tag_name, $.tag_name),
       '>',
     ),
 
@@ -149,7 +162,7 @@ module.exports = grammar({
 
     style_end_tag: $ => seq(
       '</',
-      alias($.style_tag_name, $.tag_name),
+      alias($._end_tag_name, $.tag_name),
       '>',
     ),
 
