@@ -572,7 +572,13 @@ static bool is_script_tag_name(const char *name) {
 }
 
 static bool scan_expected_end_tag(Scanner *scanner, TSLexer *lexer) {
-    if (scanner->tags.size == 0 || lexer->lookahead != '<') {
+    if (lexer->lookahead != '<') {
+        return false;
+    }
+
+    lexer->advance(lexer, false);
+
+    if (scanner->tags.size == 0) {
         return false;
     }
 
@@ -580,8 +586,6 @@ static bool scan_expected_end_tag(Scanner *scanner, TSLexer *lexer) {
     if (expected->size == 0) {
         return false;
     }
-
-    lexer->advance(lexer, false);
 
     if (lexer->lookahead != '/') {
         return false;
