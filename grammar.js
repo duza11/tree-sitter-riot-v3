@@ -17,7 +17,8 @@ module.exports = grammar({
     $.raw_text,
     $.component_script,
     $.riot_expression_text,
-    $.riot_each_expression_text,
+    $._riot_each_shorthand_expression_text,
+    $.riot_each_collection_expression,
     $.riot_class_expression_text,
     $._scss_style_tag_name,
     $._css_style_tag_name,
@@ -230,9 +231,22 @@ module.exports = grammar({
 
     riot_each_expression: $ => seq(
       '{',
-      $.riot_each_expression_text,
+      choice(
+        field('collection', alias(
+          $._riot_each_shorthand_expression_text,
+          $.riot_each_collection_expression,
+        )),
+        seq(
+          field('binding', $.riot_each_binding),
+          optional(seq(',', field('index', $.riot_each_binding))),
+          field('operator', alias('in', $.riot_each_operator)),
+          field('collection', $.riot_each_collection_expression),
+        ),
+      ),
       '}',
     ),
+
+    riot_each_binding: _ => /[A-Za-z_$][A-Za-z0-9_$]*/,
 
     riot_class_expression: $ => seq(
       '{',

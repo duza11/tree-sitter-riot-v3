@@ -17,3 +17,7 @@
 (riot_expression
   (riot_expression_text) @injection.content
   (#set! injection.language "javascript"))
+
+(riot_each_expression
+  collection: (riot_each_collection_expression) @injection.content
+  (#set! injection.language "javascript"))

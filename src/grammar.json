@@ -878,14 +878,91 @@
           "value": "{"
         },
         {
-          "type": "SYMBOL",
-          "name": "riot_each_expression_text"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "collection",
+              "content": {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "_riot_each_shorthand_expression_text"
+                },
+                "named": true,
+                "value": "riot_each_collection_expression"
+              }
+            },
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "FIELD",
+                  "name": "binding",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "riot_each_binding"
+                  }
+                },
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "SEQ",
+                      "members": [
+                        {
+                          "type": "STRING",
+                          "value": ","
+                        },
+                        {
+                          "type": "FIELD",
+                          "name": "index",
+                          "content": {
+                            "type": "SYMBOL",
+                            "name": "riot_each_binding"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
+                },
+                {
+                  "type": "FIELD",
+                  "name": "operator",
+                  "content": {
+                    "type": "ALIAS",
+                    "content": {
+                      "type": "STRING",
+                      "value": "in"
+                    },
+                    "named": true,
+                    "value": "riot_each_operator"
+                  }
+                },
+                {
+                  "type": "FIELD",
+                  "name": "collection",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "riot_each_collection_expression"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "type": "STRING",
           "value": "}"
         }
       ]
+    },
+    "riot_each_binding": {
+      "type": "PATTERN",
+      "value": "[A-Za-z_$][A-Za-z0-9_$]*"
     },
     "riot_class_expression": {
       "type": "SEQ",
@@ -939,7 +1016,11 @@
     },
     {
       "type": "SYMBOL",
-      "name": "riot_each_expression_text"
+      "name": "_riot_each_shorthand_expression_text"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "riot_each_collection_expression"
     },
     {
       "type": "SYMBOL",

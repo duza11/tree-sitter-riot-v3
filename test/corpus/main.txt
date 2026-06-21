@@ -82,6 +82,8 @@ Riot each and class shorthand expressions
     <li each={ items } class={ completed: done }>{ title }</li>
     <li each="{ item, i in items }" class="{ active: item.active, first: i === 0 }"></li>
     <li each={ item in items } class={ item.active ? 'active' : '' }></li>
+    <li each={ entry, index in items.filter(item => item.label.includes(' in ')) }></li>
+    <li each={ flag in key in object }></li>
     <li class={ classes }></li>
     <li class={{ active: isActive }}></li>
     <li class={ selected: item.active ? yes : no, hidden: item.hidden }></li>
@@ -107,7 +109,7 @@ Riot each and class shorthand expressions
               (each_attribute
                 (attribute_name)
                 (riot_each_expression
-                  (riot_each_expression_text)))
+                  (riot_each_collection_expression)))
               (attribute
                 (attribute_name)
                 (attribute_value
@@ -125,7 +127,10 @@ Riot each and class shorthand expressions
                 (attribute_name)
                 (quoted_riot_each_expression
                   (riot_each_expression
-                    (riot_each_expression_text))))
+                    (riot_each_binding)
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression))))
               (attribute
                 (attribute_name)
                 (attribute_value
@@ -141,12 +146,39 @@ Riot each and class shorthand expressions
               (each_attribute
                 (attribute_name)
                 (riot_each_expression
-                  (riot_each_expression_text)))
+                  (riot_each_binding)
+                  (riot_each_operator)
+                  (riot_each_collection_expression)))
               (attribute
                 (attribute_name)
                 (attribute_value
                   (riot_expression
                     (riot_expression_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (riot_each_expression
+                  (riot_each_binding)
+                  (riot_each_binding)
+                  (riot_each_operator)
+                  (riot_each_collection_expression))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (riot_each_expression
+                  (riot_each_binding)
+                  (riot_each_operator)
+                  (riot_each_collection_expression))))
             (end_tag
               (tag_name))))
         (element

@@ -340,16 +340,47 @@
   {
     "type": "riot_each_expression",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "riot_each_expression_text",
-          "named": true
-        }
-      ]
+    "fields": {
+      "binding": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "riot_each_binding",
+            "named": true
+          }
+        ]
+      },
+      "collection": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "riot_each_collection_expression",
+            "named": true
+          }
+        ]
+      },
+      "index": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "riot_each_binding",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "riot_each_operator",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -630,6 +661,10 @@
     "named": false
   },
   {
+    "type": ",",
+    "named": false
+  },
+  {
     "type": "/>",
     "named": false
   },
@@ -678,7 +713,15 @@
     "named": true
   },
   {
-    "type": "riot_each_expression_text",
+    "type": "riot_each_binding",
+    "named": true
+  },
+  {
+    "type": "riot_each_collection_expression",
+    "named": true
+  },
+  {
+    "type": "riot_each_operator",
     "named": true
   },
   {
