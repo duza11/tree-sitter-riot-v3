@@ -10,7 +10,8 @@ enum TokenType {
     RAW_TEXT,
     COMPONENT_SCRIPT,
     RIOT_EXPRESSION_TEXT,
-    RIOT_EACH_EXPRESSION_TEXT,
+    RIOT_EACH_SHORTHAND_EXPRESSION_TEXT,
+    RIOT_EACH_COLLECTION_EXPRESSION,
     RIOT_CLASS_EXPRESSION_TEXT,
     SCSS_STYLE_TAG_NAME,
     CSS_STYLE_TAG_NAME,
@@ -377,13 +378,16 @@ static void scan_js_template(TSLexer *lexer) {
     }
 }
 
-static bool scan_riot_expression_text(TSLexer *lexer, const bool *valid_symbols) {
+static bool scan_riot_expression_text(
+    TSLexer *lexer,
+    const bool *valid_symbols,
+    bool has_content,
+    bool can_start_regex
+) {
     unsigned brace_depth = 0;
     unsigned parenthesis_depth = 0;
     unsigned bracket_depth = 0;
     unsigned ternary_depth = 0;
-    bool has_content = false;
-    bool can_start_regex = true;
     bool is_class_shorthand = false;
 
     while (!lexer->eof(lexer)) {
@@ -517,8 +521,8 @@ static bool scan_riot_expression_text(TSLexer *lexer, const bool *valid_symbols)
         }
 
         consume(lexer);
-        has_content = true;
         if (!is_space(current)) {
+            has_content = true;
             can_start_regex = current != ')' && current != ']';
         }
     }
@@ -527,8 +531,13 @@ static bool scan_riot_expression_text(TSLexer *lexer, const bool *valid_symbols)
         return false;
     }
 
-    if (valid_symbols[RIOT_EACH_EXPRESSION_TEXT]) {
-        lexer->result_symbol = RIOT_EACH_EXPRESSION_TEXT;
+    if (valid_symbols[RIOT_EACH_COLLECTION_EXPRESSION]) {
+        lexer->result_symbol = RIOT_EACH_COLLECTION_EXPRESSION;
+        return true;
+    }
+
+    if (valid_symbols[RIOT_EACH_SHORTHAND_EXPRESSION_TEXT]) {
+        lexer->result_symbol = RIOT_EACH_SHORTHAND_EXPRESSION_TEXT;
         return true;
     }
 
@@ -543,6 +552,67 @@ static bool scan_riot_expression_text(TSLexer *lexer, const bool *valid_symbols)
     }
 
     return false;
+}
+
+static bool skip_each_spaces(TSLexer *lexer) {
+    bool skipped = false;
+
+    while (!lexer->eof(lexer) && is_space(lexer->lookahead)) {
+        lexer->advance(lexer, false);
+        skipped = true;
+    }
+
+    return skipped;
+}
+
+static bool scan_each_identifier(TSLexer *lexer) {
+    if (!is_identifier_start(lexer->lookahead)) {
+        return false;
+    }
+
+    do {
+        lexer->advance(lexer, false);
+    } while (is_identifier_continue(lexer->lookahead));
+
+    return true;
+}
+
+static bool scan_riot_each_shorthand_expression(
+    TSLexer *lexer,
+    const bool *valid_symbols
+) {
+    skip_each_spaces(lexer);
+
+    if (!scan_each_identifier(lexer)) {
+        return scan_riot_expression_text(lexer, valid_symbols, false, true);
+    }
+
+    bool has_space = skip_each_spaces(lexer);
+
+    if (lexer->lookahead == ',') {
+        lexer->advance(lexer, false);
+        skip_each_spaces(lexer);
+
+        if (!scan_each_identifier(lexer)) {
+            lexer->mark_end(lexer);
+            return scan_riot_expression_text(lexer, valid_symbols, true, false);
+        }
+
+        has_space = skip_each_spaces(lexer);
+    }
+
+    if (has_space && lexer->lookahead == 'i') {
+        lexer->advance(lexer, false);
+        if (lexer->lookahead == 'n') {
+            lexer->advance(lexer, false);
+            if (skip_each_spaces(lexer)) {
+                return false;
+            }
+        }
+    }
+
+    lexer->mark_end(lexer);
+    return scan_riot_expression_text(lexer, valid_symbols, true, false);
 }
 
 static bool is_void_tag_name(const char *name) {
@@ -1031,11 +1101,17 @@ bool tree_sitter_riot_v3_external_scanner_scan(
     }
 
     if (
+        valid_symbols[RIOT_EACH_SHORTHAND_EXPRESSION_TEXT]
+    ) {
+        return scan_riot_each_shorthand_expression(lexer, valid_symbols);
+    }
+
+    if (
         valid_symbols[RIOT_EXPRESSION_TEXT] ||
-        valid_symbols[RIOT_EACH_EXPRESSION_TEXT] ||
+        valid_symbols[RIOT_EACH_COLLECTION_EXPRESSION] ||
         valid_symbols[RIOT_CLASS_EXPRESSION_TEXT]
     ) {
-        return scan_riot_expression_text(lexer, valid_symbols);
+        return scan_riot_expression_text(lexer, valid_symbols, false, true);
     }
 
     return false;

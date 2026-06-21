@@ -50,7 +50,8 @@
 (riot_expression_text) @variable
 (riot_each_expression "{" @punctuation.bracket)
 (riot_each_expression "}" @punctuation.bracket)
-(riot_each_expression_text) @variable
+(riot_each_binding) @variable.parameter
+(riot_each_operator) @keyword.operator
 (riot_class_expression "{" @punctuation.bracket)
 (riot_class_expression "}" @punctuation.bracket)
 (riot_class_expression_text) @variable
