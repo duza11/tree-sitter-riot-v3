@@ -8,6 +8,11 @@ Template expressions in text and attributes
   <div title="prefix { title } suffix"></div>
   <div class={ activeClass }></div>
   <div class={{ hoge: true, fuga: true }}></div>
+  <a href={url}{path}/ target="_brank">{url}{path}/</a>
+  <a href=api/{version}/users/{id}></a>
+  <a href={base || "/"}{path}></a>
+  <a href={getUrl("}")}/path></a>
+  <div data-value=plain data-query=foo=bar></div>
 </template-vars>
 
 ---
@@ -55,8 +60,9 @@ Template expressions in text and attributes
           (attribute
             (attribute_name)
             (attribute_value
-              (riot_expression
-                (riot_expression_text)))))
+              (unquoted_attribute_value
+                (riot_expression
+                  (riot_expression_text))))))
         (end_tag
           name: (tag_name))))
     (element
@@ -66,8 +72,93 @@ Template expressions in text and attributes
           (attribute
             (attribute_name)
             (attribute_value
-              (riot_expression
-                (riot_expression_text)))))
+              (unquoted_attribute_value
+                (riot_expression
+                  (riot_expression_text))))))
+        (end_tag
+          name: (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name)
+          (attribute
+            (attribute_name)
+            (attribute_value
+              (unquoted_attribute_value
+                (riot_expression
+                  (riot_expression_text))
+                (riot_expression
+                  (riot_expression_text))
+                (unquoted_attribute_text))))
+          (attribute
+            (attribute_name)
+            (attribute_value
+              (quoted_attribute_value
+                (quoted_attribute_text)))))
+        (riot_expression
+          (riot_expression_text))
+        (riot_expression
+          (riot_expression_text))
+        (text)
+        (end_tag
+          name: (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name)
+          (attribute
+            (attribute_name)
+            (attribute_value
+              (unquoted_attribute_value
+                (unquoted_attribute_text)
+                (riot_expression
+                  (riot_expression_text))
+                (unquoted_attribute_text)
+                (riot_expression
+                  (riot_expression_text))))))
+        (end_tag
+          name: (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name)
+          (attribute
+            (attribute_name)
+            (attribute_value
+              (unquoted_attribute_value
+                (riot_expression
+                  (riot_expression_text))
+                (riot_expression
+                  (riot_expression_text))))))
+        (end_tag
+          name: (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name)
+          (attribute
+            (attribute_name)
+            (attribute_value
+              (unquoted_attribute_value
+                (riot_expression
+                  (riot_expression_text))
+                (unquoted_attribute_text)))))
+        (end_tag
+          name: (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name)
+          (attribute
+            (attribute_name)
+            (attribute_value
+              (unquoted_attribute_value
+                (unquoted_attribute_text))))
+          (attribute
+            (attribute_name)
+            (attribute_value
+              (unquoted_attribute_value
+                (unquoted_attribute_text)))))
         (end_tag
           name: (tag_name))))
     (end_tag
@@ -113,8 +204,9 @@ Riot each and class shorthand expressions
               (attribute
                 (attribute_name)
                 (attribute_value
-                  (riot_class_expression
-                    (riot_class_expression_text)))))
+                  (unquoted_attribute_value
+                    (riot_class_expression
+                      (riot_class_expression_text))))))
             (riot_expression
               (riot_expression_text))
             (end_tag
@@ -152,8 +244,9 @@ Riot each and class shorthand expressions
               (attribute
                 (attribute_name)
                 (attribute_value
-                  (riot_expression
-                    (riot_expression_text)))))
+                  (unquoted_attribute_value
+                    (riot_expression
+                      (riot_expression_text))))))
             (end_tag
               (tag_name))))
         (element
@@ -188,8 +281,9 @@ Riot each and class shorthand expressions
               (attribute
                 (attribute_name)
                 (attribute_value
-                  (riot_expression
-                    (riot_expression_text)))))
+                  (unquoted_attribute_value
+                    (riot_expression
+                      (riot_expression_text))))))
             (end_tag
               (tag_name))))
         (element
@@ -199,8 +293,9 @@ Riot each and class shorthand expressions
               (attribute
                 (attribute_name)
                 (attribute_value
-                  (riot_expression
-                    (riot_expression_text)))))
+                  (unquoted_attribute_value
+                    (riot_expression
+                      (riot_expression_text))))))
             (end_tag
               (tag_name))))
         (element
@@ -210,8 +305,9 @@ Riot each and class shorthand expressions
               (attribute
                 (attribute_name)
                 (attribute_value
-                  (riot_class_expression
-                    (riot_class_expression_text)))))
+                  (unquoted_attribute_value
+                    (riot_class_expression
+                      (riot_class_expression_text))))))
             (end_tag
               (tag_name))))
         (element
@@ -221,8 +317,9 @@ Riot each and class shorthand expressions
               (attribute
                 (attribute_name)
                 (attribute_value
-                  (riot_expression
-                    (riot_expression_text)))))
+                  (unquoted_attribute_value
+                    (riot_expression
+                      (riot_expression_text))))))
             (end_tag
               (tag_name))))
         (element
@@ -232,8 +329,9 @@ Riot each and class shorthand expressions
               (attribute
                 (attribute_name)
                 (attribute_value
-                  (riot_class_expression
-                    (riot_class_expression_text)))))
+                  (unquoted_attribute_value
+                    (riot_class_expression
+                      (riot_class_expression_text))))))
             (end_tag
               (tag_name))))
         (end_tag
@@ -430,16 +528,18 @@ Void and self-closing elements
         (attribute
           (attribute_name)
           (attribute_value
-            (riot_expression
-              (riot_expression_text))))))
+            (unquoted_attribute_value
+              (riot_expression
+                (riot_expression_text)))))))
     (element
       (self_closing_element
         name: (tag_name)
         (attribute
           (attribute_name)
           (attribute_value
-            (riot_expression
-              (riot_expression_text))))))
+            (unquoted_attribute_value
+              (riot_expression
+                (riot_expression_text)))))))
     (end_tag
       name: (tag_name))))
 

@@ -31,14 +31,6 @@
           "named": true
         },
         {
-          "type": "riot_class_expression",
-          "named": true
-        },
-        {
-          "type": "riot_expression",
-          "named": true
-        },
-        {
           "type": "unquoted_attribute_value",
           "named": true
         }
@@ -623,6 +615,29 @@
     }
   },
   {
+    "type": "unquoted_attribute_value",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "riot_class_expression",
+          "named": true
+        },
+        {
+          "type": "riot_expression",
+          "named": true
+        },
+        {
+          "type": "unquoted_attribute_text",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "void_element",
     "named": true,
     "fields": {
@@ -741,7 +756,7 @@
     "named": true
   },
   {
-    "type": "unquoted_attribute_value",
+    "type": "unquoted_attribute_text",
     "named": true
   },
   {
