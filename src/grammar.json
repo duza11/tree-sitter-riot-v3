@@ -682,14 +682,6 @@
         },
         {
           "type": "SYMBOL",
-          "name": "riot_class_expression"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "riot_expression"
-        },
-        {
-          "type": "SYMBOL",
           "name": "unquoted_attribute_value"
         }
       ]
@@ -774,13 +766,33 @@
       "value": "[^'{}]+"
     },
     "unquoted_attribute_value": {
+      "type": "REPEAT1",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "riot_class_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "riot_expression"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "unquoted_attribute_text"
+          }
+        ]
+      }
+    },
+    "unquoted_attribute_text": {
       "type": "TOKEN",
       "content": {
         "type": "PREC",
         "value": -1,
         "content": {
           "type": "PATTERN",
-          "value": "[^\\s<>'\"={}]+"
+          "value": "[^\\s<>'\"{}]+"
         }
       }
     },

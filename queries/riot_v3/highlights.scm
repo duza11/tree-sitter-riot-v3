@@ -26,7 +26,7 @@
 ; Attributes
 (attribute_name) @attribute
 (quoted_attribute_value) @string
-(unquoted_attribute_value) @string
+(unquoted_attribute_text) @string
 
 ((attribute_name) @keyword.directive
   (#any-of? @keyword.directive

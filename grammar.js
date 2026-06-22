@@ -195,8 +195,6 @@ module.exports = grammar({
 
     attribute_value: $ => choice(
       $.quoted_attribute_value,
-      $.riot_class_expression,
-      $.riot_expression,
       $.unquoted_attribute_value,
     ),
 
@@ -209,7 +207,13 @@ module.exports = grammar({
 
     single_quoted_attribute_text: _ => /[^'{}]+/,
 
-    unquoted_attribute_value: _ => token(prec(-1, /[^\s<>'"={}]+/)),
+    unquoted_attribute_value: $ => repeat1(choice(
+      $.riot_class_expression,
+      $.riot_expression,
+      $.unquoted_attribute_text,
+    )),
+
+    unquoted_attribute_text: _ => token(prec(-1, /[^\s<>'"{}]+/)),
 
     tag_name: _ => token(prec(1, /[A-Za-z][A-Za-z0-9_:.-]*/)),
 
