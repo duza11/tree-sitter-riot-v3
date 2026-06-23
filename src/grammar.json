@@ -858,7 +858,7 @@
         "value": -1,
         "content": {
           "type": "PATTERN",
-          "value": "[^\\s<>'\"{}]+"
+          "value": "[^\\s\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff<>'\"{}]+"
         }
       }
     },
@@ -869,7 +869,7 @@
         "value": 1,
         "content": {
           "type": "PATTERN",
-          "value": "[^\\s<>'\"{}]+"
+          "value": "[^\\s\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff<>'\"{}]+"
         }
       }
     },
@@ -1085,7 +1085,7 @@
   "extras": [
     {
       "type": "PATTERN",
-      "value": "[\\s\\u3000]+"
+      "value": "[\\s\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+"
     }
   ],
   "conflicts": [],

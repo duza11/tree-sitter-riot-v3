@@ -180,7 +180,18 @@ static inline bool is_name_char(int c) {
 }
 
 static inline bool is_space(int c) {
-    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
+    return
+        (c >= '\t' && c <= '\r') ||
+        c == ' ' ||
+        c == 0x00A0 ||
+        c == 0x1680 ||
+        (c >= 0x2000 && c <= 0x200A) ||
+        c == 0x2028 ||
+        c == 0x2029 ||
+        c == 0x202F ||
+        c == 0x205F ||
+        c == 0x3000 ||
+        c == 0xFEFF;
 }
 
 static inline bool is_identifier_start(int c) {

@@ -184,25 +184,24 @@ Template expressions in text and attributes
       name: (tag_name))))
 
 ==================
-Riot each and class shorthand expressions
+Riot each expressions
 ==================
 
 <riot-directives>
   <ul>
-    <li each={ items } class={ completed: done }>{ title }</li>
-    <li each="{ item, i in items }" class="{ active: item.active, first: i === 0 }"></li>
-    <li each={ item in items } class={ item.active ? 'active' : '' }></li>
+    <li each={ items }>{ title }</li>
+    <li each="{ item, i in items }"></li>
+    <li each={ item in items }></li>
     <li each={ entry, index in items.filter(item => item.label.includes(' in ')) }></li>
     <li each={ flag in key in object }></li>
     <li each={ item in items }suffix></li>
-    <li each=prefix{ item in items }suffix class=entry></li>
+    <li each=prefix{ item in items }suffix data-state=entry></li>
     <li each=prefix{ item in items }-{ fallbackItems }suffix data-id=x></li>
+    <li each={ item in items }　data-state=wide></li>
+    <li each={ item　in　items }　data-state=wide-loop></li>
+    <li each=prefix{ item in items } data-state=nbsp></li>
+    <li each={ item in items } data-kind=em></li>
     <li each=plain></li>
-    <li class={ classes }></li>
-    <li class={{ active: isActive }}></li>
-    <li class={ selected: item.active ? yes : no, hidden: item.hidden }></li>
-    <li class={ getClass(':') }></li>
-    <li data-state={ ready: isReady }></li>
   </ul>
 </riot-directives>
 
@@ -224,13 +223,7 @@ Riot each and class shorthand expressions
                 (attribute_name)
                 (unquoted_riot_each_attribute_value
                   (riot_each_expression
-                    (riot_each_collection_expression))))
-              (attribute
-                (attribute_name)
-                (attribute_value
-                  (unquoted_attribute_value
-                    (riot_class_expression
-                      (riot_class_expression_text))))))
+                    (riot_each_collection_expression)))))
             (riot_expression
               (riot_expression_text))
             (end_tag
@@ -246,7 +239,239 @@ Riot each and class shorthand expressions
                     (riot_each_binding)
                     (riot_each_binding)
                     (riot_each_operator)
+                    (riot_each_collection_expression)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression))
+                  (unquoted_attribute_text))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (unquoted_attribute_text)
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression))
+                  (unquoted_attribute_text)))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (unquoted_attribute_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (unquoted_attribute_text)
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression))
+                  (unquoted_attribute_text)
+                  (riot_each_expression
+                    (riot_each_collection_expression))
+                  (unquoted_attribute_text)))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (unquoted_attribute_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
                     (riot_each_collection_expression))))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (unquoted_attribute_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression))))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (unquoted_attribute_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (unquoted_attribute_text)
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression))))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (unquoted_attribute_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (riot_each_expression
+                    (riot_each_binding)
+                    (riot_each_operator)
+                    (riot_each_collection_expression))))
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (unquoted_attribute_text)))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (each_attribute
+                (attribute_name)
+                (unquoted_riot_each_attribute_value
+                  (unquoted_attribute_text))))
+            (end_tag
+              (tag_name))))
+        (end_tag
+          (tag_name))))
+    (end_tag
+      (tag_name))))
+
+==================
+Riot class shorthand expressions
+==================
+
+<riot-class>
+  <ul>
+    <li class={ completed: done }>{ title }</li>
+    <li class="{ active: item.active, first: i === 0 }"></li>
+    <li class={ item.active ? 'active' : '' }></li>
+    <li class={ classes }></li>
+    <li class={{ active: isActive }}></li>
+    <li class={ selected: item.active ? yes : no, hidden: item.hidden }></li>
+    <li class={ getClass(':') }></li>
+    <li data-state={ ready: isReady }></li>
+  </ul>
+</riot-class>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (riot_class_expression
+                      (riot_class_expression_text))))))
+            (riot_expression
+              (riot_expression_text))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
               (attribute
                 (attribute_name)
                 (attribute_value
@@ -259,113 +484,12 @@ Riot each and class shorthand expressions
           (normal_element
             (start_tag
               (tag_name)
-              (each_attribute
-                (attribute_name)
-                (unquoted_riot_each_attribute_value
-                  (riot_each_expression
-                    (riot_each_binding)
-                    (riot_each_operator)
-                    (riot_each_collection_expression))))
               (attribute
                 (attribute_name)
                 (attribute_value
                   (unquoted_attribute_value
                     (riot_expression
                       (riot_expression_text))))))
-            (end_tag
-              (tag_name))))
-        (element
-          (normal_element
-            (start_tag
-              (tag_name)
-              (each_attribute
-                (attribute_name)
-                (unquoted_riot_each_attribute_value
-                  (riot_each_expression
-                    (riot_each_binding)
-                    (riot_each_binding)
-                    (riot_each_operator)
-                    (riot_each_collection_expression)))))
-            (end_tag
-              (tag_name))))
-        (element
-          (normal_element
-            (start_tag
-              (tag_name)
-              (each_attribute
-                (attribute_name)
-                (unquoted_riot_each_attribute_value
-                  (riot_each_expression
-                    (riot_each_binding)
-                    (riot_each_operator)
-                    (riot_each_collection_expression)))))
-            (end_tag
-              (tag_name))))
-        (element
-          (normal_element
-            (start_tag
-              (tag_name)
-              (each_attribute
-                (attribute_name)
-                (unquoted_riot_each_attribute_value
-                  (riot_each_expression
-                    (riot_each_binding)
-                    (riot_each_operator)
-                    (riot_each_collection_expression))
-                  (unquoted_attribute_text))))
-            (end_tag
-              (tag_name))))
-        (element
-          (normal_element
-            (start_tag
-              (tag_name)
-              (each_attribute
-                (attribute_name)
-                (unquoted_riot_each_attribute_value
-                  (unquoted_attribute_text)
-                  (riot_each_expression
-                    (riot_each_binding)
-                    (riot_each_operator)
-                    (riot_each_collection_expression))
-                  (unquoted_attribute_text)))
-              (attribute
-                (attribute_name)
-                (attribute_value
-                  (unquoted_attribute_value
-                    (unquoted_attribute_text)))))
-            (end_tag
-              (tag_name))))
-        (element
-          (normal_element
-            (start_tag
-              (tag_name)
-              (each_attribute
-                (attribute_name)
-                (unquoted_riot_each_attribute_value
-                  (unquoted_attribute_text)
-                  (riot_each_expression
-                    (riot_each_binding)
-                    (riot_each_operator)
-                    (riot_each_collection_expression))
-                  (unquoted_attribute_text)
-                  (riot_each_expression
-                    (riot_each_collection_expression))
-                  (unquoted_attribute_text)))
-              (attribute
-                (attribute_name)
-                (attribute_value
-                  (unquoted_attribute_value
-                    (unquoted_attribute_text)))))
-            (end_tag
-              (tag_name))))
-        (element
-          (normal_element
-            (start_tag
-              (tag_name)
-              (each_attribute
-                (attribute_name)
-                (unquoted_riot_each_attribute_value
-                  (unquoted_attribute_text))))
             (end_tag
               (tag_name))))
         (element

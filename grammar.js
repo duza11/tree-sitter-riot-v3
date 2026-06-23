@@ -6,11 +6,14 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
+const WHITESPACE = /[\s\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/;
+const UNQUOTED_ATTRIBUTE_TEXT = /[^\s\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff<>'"{}]+/;
+
 module.exports = grammar({
   name: 'riot_v3',
 
   extras: _ => [
-    /[\s\u3000]+/,
+    WHITESPACE,
   ],
 
   externals: $ => [
@@ -224,9 +227,9 @@ module.exports = grammar({
       )),
     ),
 
-    unquoted_attribute_text: _ => token(prec(-1, /[^\s<>'"{}]+/)),
+    unquoted_attribute_text: _ => token(prec(-1, UNQUOTED_ATTRIBUTE_TEXT)),
 
-    _unquoted_attribute_text_immediate: _ => token.immediate(prec(1, /[^\s<>'"{}]+/)),
+    _unquoted_attribute_text_immediate: _ => token.immediate(prec(1, UNQUOTED_ATTRIBUTE_TEXT)),
 
     tag_name: _ => token(prec(1, /[A-Za-z][A-Za-z0-9_:.-]*/)),
 
