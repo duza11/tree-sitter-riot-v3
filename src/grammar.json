@@ -1074,10 +1074,96 @@
       "type": "TOKEN",
       "content": {
         "type": "PREC",
-        "value": -1,
+        "value": 1,
         "content": {
-          "type": "PATTERN",
-          "value": "[^<{\\s\\u3000][^<{]*"
+          "type": "REPEAT1",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "[^<{\\s\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff][^<{]*"
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "<"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[^A-Za-z/!-]"
+                  }
+                ]
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "<-"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[^A-Za-z]"
+                  }
+                ]
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "</"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[^A-Za-z-]"
+                  }
+                ]
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "</-"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[^A-Za-z]"
+                  }
+                ]
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "<!"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[^-]"
+                  }
+                ]
+              },
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "<!-"
+                  },
+                  {
+                    "type": "PATTERN",
+                    "value": "[^-]"
+                  }
+                ]
+              }
+            ]
+          }
         }
       }
     }

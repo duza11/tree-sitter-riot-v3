@@ -274,6 +274,14 @@ module.exports = grammar({
       '}',
     ),
 
-    text: _ => token(prec(-1, /[^<{\s\u3000][^<{]*/)),
+    text: _ => token(prec(1, repeat1(choice(
+      /[^<{\s\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff][^<{]*/,
+      seq('<', /[^A-Za-z/!-]/),
+      seq('<-', /[^A-Za-z]/),
+      seq('</', /[^A-Za-z-]/),
+      seq('</-', /[^A-Za-z]/),
+      seq('<!', /[^-]/),
+      seq('<!-', /[^-]/),
+    )))),
   },
 });
