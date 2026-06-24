@@ -184,6 +184,82 @@ Template expressions in text and attributes
       name: (tag_name))))
 
 ==================
+Tag-like text with non-ASCII names
+==================
+
+<tag-like-text>
+  <p><タグ></p>
+  <p>before <タグ> after</p>
+  <p><タグ 属性="値">content</タグ></p>
+  <p><-タグ></p>
+  <p><tag>element</tag></p>
+  <p><-custom>custom element</-custom></p>
+</tag-like-text>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (text)
+        (end_tag
+          (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (text)
+        (end_tag
+          (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (text)
+        (end_tag
+          (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (text)
+        (end_tag
+          (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name))
+            (text)
+            (end_tag
+              (tag_name))))
+        (end_tag
+          (tag_name))))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name))
+            (text)
+            (end_tag
+              (tag_name))))
+        (end_tag
+          (tag_name))))
+    (end_tag
+      (tag_name))))
+
+==================
 Riot each expressions
 ==================
 
