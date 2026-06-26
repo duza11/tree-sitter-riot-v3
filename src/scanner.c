@@ -12,7 +12,9 @@ enum TokenType {
     RIOT_EXPRESSION_TEXT,
     RIOT_EACH_SHORTHAND_EXPRESSION_TEXT,
     RIOT_EACH_COLLECTION_EXPRESSION,
-    RIOT_CLASS_EXPRESSION_TEXT,
+    RIOT_CLASS_IDENTIFIER_NAME,
+    RIOT_CLASS_STRING_NAME,
+    RIOT_CLASS_CONDITION,
     SCSS_STYLE_TAG_NAME,
     CSS_STYLE_TAG_NAME,
     SCRIPT_START_TAG_NAME,
@@ -204,6 +206,21 @@ static inline bool is_identifier_start(int c) {
 
 static inline bool is_identifier_continue(int c) {
     return is_identifier_start(c) || (c >= '0' && c <= '9');
+}
+
+static inline bool is_riot_class_name_start(int c) {
+    return
+        (c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z') ||
+        c == '_' ||
+        (c >= 0x00A0 && c <= 0x00FF);
+}
+
+static inline bool is_riot_class_name_continue(int c) {
+    return
+        is_riot_class_name_start(c) ||
+        (c >= '0' && c <= '9') ||
+        c == '-';
 }
 
 static inline void consume(TSLexer *lexer) {
@@ -399,8 +416,6 @@ static bool scan_riot_expression_text(
     unsigned parenthesis_depth = 0;
     unsigned bracket_depth = 0;
     unsigned ternary_depth = 0;
-    bool is_class_shorthand = false;
-
     while (!lexer->eof(lexer)) {
         int current = lexer->lookahead;
 
@@ -513,8 +528,6 @@ static bool scan_riot_expression_text(
         if (current == ':' && is_top_level) {
             if (ternary_depth > 0) {
                 ternary_depth--;
-            } else {
-                is_class_shorthand = true;
             }
             consume(lexer);
             has_content = true;
@@ -549,11 +562,6 @@ static bool scan_riot_expression_text(
 
     if (valid_symbols[RIOT_EACH_SHORTHAND_EXPRESSION_TEXT]) {
         lexer->result_symbol = RIOT_EACH_SHORTHAND_EXPRESSION_TEXT;
-        return true;
-    }
-
-    if (valid_symbols[RIOT_CLASS_EXPRESSION_TEXT] && is_class_shorthand) {
-        lexer->result_symbol = RIOT_CLASS_EXPRESSION_TEXT;
         return true;
     }
 
@@ -624,6 +632,188 @@ static bool scan_riot_each_shorthand_expression(
 
     lexer->mark_end(lexer);
     return scan_riot_expression_text(lexer, valid_symbols, true, false);
+}
+
+static bool scan_riot_class_condition(TSLexer *lexer) {
+    unsigned brace_depth = 0;
+    unsigned parenthesis_depth = 0;
+    unsigned bracket_depth = 0;
+    bool has_content = false;
+    bool can_start_regex = true;
+
+    while (!lexer->eof(lexer)) {
+        int current = lexer->lookahead;
+
+        if (
+            brace_depth == 0 &&
+            parenthesis_depth == 0 &&
+            bracket_depth == 0 &&
+            (current == ',' || current == '}')
+        ) {
+            break;
+        }
+
+        if (current == '\'' || current == '"') {
+            scan_js_string(lexer, current);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '`') {
+            scan_js_template(lexer);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '/') {
+            consume(lexer);
+            has_content = true;
+            if (lexer->lookahead == '/') {
+                consume(lexer);
+                scan_js_line_comment(lexer);
+            } else if (lexer->lookahead == '*') {
+                consume(lexer);
+                scan_js_block_comment(lexer);
+            } else if (can_start_regex) {
+                scan_js_regex(lexer);
+                can_start_regex = false;
+            } else {
+                can_start_regex = true;
+            }
+            continue;
+        }
+
+        if (current == '{') {
+            brace_depth++;
+            consume(lexer);
+            has_content = true;
+            can_start_regex = true;
+            continue;
+        }
+
+        if (current == '}') {
+            if (brace_depth == 0) {
+                break;
+            }
+            brace_depth--;
+            consume(lexer);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '(') {
+            parenthesis_depth++;
+            consume(lexer);
+            has_content = true;
+            can_start_regex = true;
+            continue;
+        }
+
+        if (current == ')') {
+            if (parenthesis_depth > 0) {
+                parenthesis_depth--;
+            }
+            consume(lexer);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '[') {
+            bracket_depth++;
+            consume(lexer);
+            has_content = true;
+            can_start_regex = true;
+            continue;
+        }
+
+        if (current == ']') {
+            if (bracket_depth > 0) {
+                bracket_depth--;
+            }
+            consume(lexer);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (is_identifier_start(current) || (current >= '0' && current <= '9')) {
+            while (is_identifier_continue(lexer->lookahead)) {
+                consume(lexer);
+            }
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        consume(lexer);
+        if (!is_space(current)) {
+            has_content = true;
+            can_start_regex = current != ')' && current != ']';
+        }
+    }
+
+    if (!has_content) {
+        return false;
+    }
+
+    lexer->result_symbol = RIOT_CLASS_CONDITION;
+    return true;
+}
+
+static bool scan_riot_class_name(TSLexer *lexer, const bool *valid_symbols) {
+    bool is_string = false;
+    bool has_content = false;
+
+    while (!lexer->eof(lexer) && is_space(lexer->lookahead)) {
+        lexer->advance(lexer, true);
+    }
+
+    if (valid_symbols[RIOT_CLASS_STRING_NAME] &&
+        (lexer->lookahead == '"' || lexer->lookahead == '\'')
+    ) {
+        scan_js_string(lexer, lexer->lookahead);
+        is_string = true;
+        has_content = true;
+    } else if (valid_symbols[RIOT_CLASS_IDENTIFIER_NAME]) {
+        if (lexer->lookahead == '-') {
+            lexer->advance(lexer, false);
+            has_content = true;
+        }
+
+        if (!is_riot_class_name_start(lexer->lookahead)) {
+            if (has_content && valid_symbols[RIOT_EXPRESSION_TEXT]) {
+                return scan_riot_expression_text(lexer, valid_symbols, true, false);
+            }
+            return false;
+        }
+
+        lexer->advance(lexer, false);
+        has_content = true;
+        while (is_riot_class_name_continue(lexer->lookahead)) {
+            lexer->advance(lexer, false);
+        }
+    } else {
+        return false;
+    }
+
+    lexer->mark_end(lexer);
+    skip_each_spaces(lexer);
+
+    if (lexer->lookahead != ':') {
+        if (valid_symbols[RIOT_EXPRESSION_TEXT]) {
+            return scan_riot_expression_text(lexer, valid_symbols, has_content, false);
+        }
+        return false;
+    }
+
+    lexer->result_symbol = is_string
+        ? RIOT_CLASS_STRING_NAME
+        : RIOT_CLASS_IDENTIFIER_NAME;
+    return true;
 }
 
 static bool is_void_tag_name(const char *name) {
@@ -1118,9 +1308,21 @@ bool tree_sitter_riot_v3_external_scanner_scan(
     }
 
     if (
+        valid_symbols[RIOT_CLASS_IDENTIFIER_NAME] ||
+        valid_symbols[RIOT_CLASS_STRING_NAME]
+    ) {
+        if (scan_riot_class_name(lexer, valid_symbols)) {
+            return true;
+        }
+    }
+
+    if (valid_symbols[RIOT_CLASS_CONDITION]) {
+        return scan_riot_class_condition(lexer);
+    }
+
+    if (
         valid_symbols[RIOT_EXPRESSION_TEXT] ||
-        valid_symbols[RIOT_EACH_COLLECTION_EXPRESSION] ||
-        valid_symbols[RIOT_CLASS_EXPRESSION_TEXT]
+        valid_symbols[RIOT_EACH_COLLECTION_EXPRESSION]
     ) {
         return scan_riot_expression_text(lexer, valid_symbols, false, true);
     }

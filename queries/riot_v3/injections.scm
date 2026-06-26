@@ -21,3 +21,7 @@
 (riot_each_expression
   collection: (riot_each_collection_expression) @injection.content
   (#set! injection.language "javascript"))
+
+(riot_class_pair
+  condition: (riot_class_condition) @injection.content
+  (#set! injection.language "javascript"))

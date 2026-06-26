@@ -1062,11 +1062,74 @@
         },
         {
           "type": "SYMBOL",
-          "name": "riot_class_expression_text"
+          "name": "riot_class_pair"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "SYMBOL",
+                "name": "riot_class_pair"
+              }
+            ]
+          }
         },
         {
           "type": "STRING",
           "value": "}"
+        }
+      ]
+    },
+    "riot_class_pair": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "riot_class_name"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "operator",
+          "content": {
+            "type": "ALIAS",
+            "content": {
+              "type": "STRING",
+              "value": ":"
+            },
+            "named": true,
+            "value": "riot_class_operator"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "condition",
+          "content": {
+            "type": "SYMBOL",
+            "name": "riot_class_condition"
+          }
+        }
+      ]
+    },
+    "riot_class_name": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "riot_class_identifier_name"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "riot_class_string_name"
         }
       ]
     },
@@ -1199,7 +1262,15 @@
     },
     {
       "type": "SYMBOL",
-      "name": "riot_class_expression_text"
+      "name": "riot_class_identifier_name"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "riot_class_string_name"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "riot_class_condition"
     },
     {
       "type": "SYMBOL",
