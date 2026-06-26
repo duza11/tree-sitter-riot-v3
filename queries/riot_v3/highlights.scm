@@ -54,4 +54,7 @@
 (riot_each_operator) @keyword.operator
 (riot_class_expression "{" @punctuation.bracket)
 (riot_class_expression "}" @punctuation.bracket)
-(riot_class_expression_text) @variable
+(riot_class_identifier_name) @property
+(riot_class_string_name) @string
+(riot_class_operator) @punctuation.delimiter
+(riot_class_expression "," @punctuation.delimiter)

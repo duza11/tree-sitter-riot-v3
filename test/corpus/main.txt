@@ -511,6 +511,7 @@ Riot class shorthand expressions
   <ul>
     <li class={ completed: done }>{ title }</li>
     <li class="{ active: item.active, first: i === 0 }"></li>
+    <li class={ -active: isActive, "is-disabled": isDisabled, 'is-ready': ready }></li>
     <li class={ item.active ? 'active' : '' }></li>
     <li class={ classes }></li>
     <li class={{ active: isActive }}></li>
@@ -539,7 +540,11 @@ Riot class shorthand expressions
                 (attribute_value
                   (unquoted_attribute_value
                     (riot_class_expression
-                      (riot_class_expression_text))))))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_identifier_name))
+                        (riot_class_operator)
+                        (riot_class_condition)))))))
             (riot_expression
               (riot_expression_text))
             (end_tag
@@ -553,7 +558,42 @@ Riot class shorthand expressions
                 (attribute_value
                   (quoted_attribute_value
                     (riot_class_expression
-                      (riot_class_expression_text))))))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_identifier_name))
+                        (riot_class_operator)
+                        (riot_class_condition))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_identifier_name))
+                        (riot_class_operator)
+                        (riot_class_condition)))))))
+            (end_tag
+              (tag_name))))
+        (element
+          (normal_element
+            (start_tag
+              (tag_name)
+              (attribute
+                (attribute_name)
+                (attribute_value
+                  (unquoted_attribute_value
+                    (riot_class_expression
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_identifier_name))
+                        (riot_class_operator)
+                        (riot_class_condition))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_string_name))
+                        (riot_class_operator)
+                        (riot_class_condition))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_string_name))
+                        (riot_class_operator)
+                        (riot_class_condition)))))))
             (end_tag
               (tag_name))))
         (element
@@ -601,7 +641,16 @@ Riot class shorthand expressions
                 (attribute_value
                   (unquoted_attribute_value
                     (riot_class_expression
-                      (riot_class_expression_text))))))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_identifier_name))
+                        (riot_class_operator)
+                        (riot_class_condition))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_identifier_name))
+                        (riot_class_operator)
+                        (riot_class_condition)))))))
             (end_tag
               (tag_name))))
         (element
@@ -625,7 +674,11 @@ Riot class shorthand expressions
                 (attribute_value
                   (unquoted_attribute_value
                     (riot_class_expression
-                      (riot_class_expression_text))))))
+                      (riot_class_pair
+                        (riot_class_name
+                          (riot_class_identifier_name))
+                        (riot_class_operator)
+                        (riot_class_condition)))))))
             (end_tag
               (tag_name))))
         (end_tag

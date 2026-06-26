@@ -22,7 +22,9 @@ module.exports = grammar({
     $.riot_expression_text,
     $._riot_each_shorthand_expression_text,
     $.riot_each_collection_expression,
-    $.riot_class_expression_text,
+    $.riot_class_identifier_name,
+    $.riot_class_string_name,
+    $.riot_class_condition,
     $._scss_style_tag_name,
     $._css_style_tag_name,
     $._script_start_tag_name,
@@ -270,8 +272,20 @@ module.exports = grammar({
 
     riot_class_expression: $ => seq(
       '{',
-      $.riot_class_expression_text,
+      $.riot_class_pair,
+      repeat(seq(',', $.riot_class_pair)),
       '}',
+    ),
+
+    riot_class_pair: $ => seq(
+      field('name', $.riot_class_name),
+      field('operator', alias(':', $.riot_class_operator)),
+      field('condition', $.riot_class_condition),
+    ),
+
+    riot_class_name: $ => choice(
+      $.riot_class_identifier_name,
+      $.riot_class_string_name,
     ),
 
     text: _ => token(prec(1, repeat1(choice(
