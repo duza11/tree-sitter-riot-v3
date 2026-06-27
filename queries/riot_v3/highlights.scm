@@ -1,6 +1,11 @@
 ; Tags
 (tag_name) @tag
 
+((tag_name) @lsp.mod.deprecated
+  (#any-of? @lsp.mod.deprecated
+    "acronym" "applet" "basefont" "big" "blink" "center" "font" "frame"
+    "frameset" "isindex" "noembed" "noframes" "strike" "tt" "xmp"))
+
 (start_tag "<" @punctuation.bracket)
 (start_tag ">" @punctuation.bracket)
 (end_tag "</" @punctuation.bracket)
