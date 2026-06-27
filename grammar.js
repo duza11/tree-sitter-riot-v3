@@ -49,7 +49,10 @@ module.exports = grammar({
     component: $ => seq(
       $.start_tag,
       repeat($._component_child),
-      optional($.component_script),
+      optional(seq(
+        $.component_script,
+        repeat($._component_script_trailing_child),
+      )),
       $.end_tag,
     ),
 
@@ -59,6 +62,11 @@ module.exports = grammar({
       $.comment,
       $.erroneous_end_tag,
       $.element,
+    ),
+
+    _component_script_trailing_child: $ => choice(
+      $.script_element,
+      $._style_element,
     ),
 
     _template_node: $ => choice(

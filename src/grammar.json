@@ -48,8 +48,20 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "component_script"
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "component_script"
+                },
+                {
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "_component_script_trailing_child"
+                  }
+                }
+              ]
             },
             {
               "type": "BLANK"
@@ -84,6 +96,19 @@
         {
           "type": "SYMBOL",
           "name": "element"
+        }
+      ]
+    },
+    "_component_script_trailing_child": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "script_element"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_style_element"
         }
       ]
     },
