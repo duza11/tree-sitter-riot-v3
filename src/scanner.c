@@ -923,6 +923,28 @@ static bool scan_component_script(TSLexer *lexer) {
                 return true;
             }
 
+            if (has_non_space) {
+                char name[8];
+                unsigned len = 0;
+
+                while (!lexer->eof(lexer) && is_name_char(lexer->lookahead)) {
+                    if (len + 1 < sizeof(name)) {
+                        name[len++] = (char)lower(lexer->lookahead);
+                    }
+                    lexer->advance(lexer, false);
+                }
+
+                name[len] = '\0';
+
+                if (
+                    strcmp(name, "script") == 0 ||
+                    strcmp(name, "style") == 0
+                ) {
+                    lexer->result_symbol = COMPONENT_SCRIPT;
+                    return true;
+                }
+            }
+
             if (
                 (lexer->lookahead >= 'A' && lexer->lookahead <= 'Z') ||
                 (lexer->lookahead >= 'a' && lexer->lookahead <= 'z') ||

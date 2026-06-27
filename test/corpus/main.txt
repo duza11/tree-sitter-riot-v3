@@ -917,6 +917,99 @@ Script element
       name: (tag_name))))
 
 ==================
+Open syntax component script
+==================
+
+<open-syntax>
+  <p>{ message }</p>
+  this.message = 'hello'
+</open-syntax>
+
+<script-only>
+  this.count = 0
+</script-only>
+
+<open-syntax-with-style>
+  <p>{ message }</p>
+  this.message = 'hello'
+  <style>
+    p { color: red; }
+  </style>
+</open-syntax-with-style>
+
+<open-syntax-with-script>
+  <p>{ message }</p>
+  this.message = 'hello'
+  <script>
+    this.ready = true
+  </script>
+</open-syntax-with-script>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (riot_expression
+          (riot_expression_text))
+        (end_tag
+          (tag_name))))
+    (component_script)
+    (end_tag
+      (tag_name)))
+  (component
+    (start_tag
+      (tag_name))
+    (component_script)
+    (end_tag
+      (tag_name)))
+  (component
+    (start_tag
+      (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (riot_expression
+          (riot_expression_text))
+        (end_tag
+          (tag_name))))
+    (component_script)
+    (css_style_element
+      (css_style_start_tag
+        (tag_name))
+      (raw_text)
+      (style_end_tag
+        (tag_name)))
+    (end_tag
+      (tag_name)))
+  (component
+    (start_tag
+      (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          (tag_name))
+        (riot_expression
+          (riot_expression_text))
+        (end_tag
+          (tag_name))))
+    (component_script)
+    (script_element
+      (script_start_tag
+        (tag_name))
+      (raw_text)
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      (tag_name))))
+
+==================
 SCSS style element by type attribute
 ==================
 
