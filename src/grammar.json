@@ -204,17 +204,8 @@
           "content": {
             "type": "ALIAS",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "_start_tag_name"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "_void_start_tag_name"
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "_start_tag_name"
             },
             "named": true,
             "value": "tag_name"
