@@ -1117,6 +1117,65 @@ static bool scan_style_attrs_is_scss(TSLexer *lexer) {
     return is_scss;
 }
 
+static bool scan_start_tag_is_self_closing(TSLexer *lexer) {
+    unsigned expression_depth = 0;
+    int quote = 0;
+    bool quote_allows_escape = false;
+
+    while (!lexer->eof(lexer)) {
+        int current = lexer->lookahead;
+
+        if (quote != 0) {
+            lexer->advance(lexer, false);
+
+            if (quote_allows_escape && current == '\\' && !lexer->eof(lexer)) {
+                lexer->advance(lexer, false);
+            } else if (current == quote) {
+                quote = 0;
+            }
+            continue;
+        }
+
+        if (current == '\'' || current == '"' || current == '`') {
+            quote = current;
+            quote_allows_escape = expression_depth > 0;
+            lexer->advance(lexer, false);
+            continue;
+        }
+
+        if (current == '{') {
+            expression_depth++;
+            lexer->advance(lexer, false);
+            continue;
+        }
+
+        if (current == '}' && expression_depth > 0) {
+            expression_depth--;
+            lexer->advance(lexer, false);
+            continue;
+        }
+
+        if (expression_depth == 0) {
+            if (current == '>') {
+                return false;
+            }
+
+            if (current == '<') {
+                return false;
+            }
+
+            if (current == '/') {
+                lexer->advance(lexer, false);
+                return lexer->lookahead == '>';
+            }
+        }
+
+        lexer->advance(lexer, false);
+    }
+
+    return false;
+}
+
 static bool scan_start_tag_name(
     Scanner *scanner,
     TSLexer *lexer,
@@ -1180,6 +1239,15 @@ static bool scan_start_tag_name(
     }
 
     if (is_void_tag_name(name) && valid_symbols[VOID_START_TAG_NAME]) {
+        if (
+            valid_symbols[START_TAG_NAME] &&
+            scan_start_tag_is_self_closing(lexer)
+        ) {
+            push_tag(scanner, name);
+            lexer->result_symbol = START_TAG_NAME;
+            return true;
+        }
+
         lexer->result_symbol = VOID_START_TAG_NAME;
         return true;
     }
@@ -1273,6 +1341,10 @@ static bool scan_implicit_end_tag(Scanner *scanner, TSLexer *lexer) {
 }
 
 static bool scan_self_closing_tag_delimiter(Scanner *scanner, TSLexer *lexer) {
+    while (is_space(lexer->lookahead)) {
+        lexer->advance(lexer, true);
+    }
+
     if (lexer->lookahead != '/') {
         return false;
     }

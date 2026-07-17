@@ -860,7 +860,12 @@ Void and self-closing elements
 
 <test-component>
   <input value={ user.name }>
+  <input/>
+  <input type="text"/>
+  <input value={ '/>' }/>
   <input value={ user.name } />
+  <custom-element/>
+  <p>{ message }</p>
 </test-component>
 
 ---
@@ -880,6 +885,17 @@ Void and self-closing elements
                 (riot_expression_text)))))))
     (element
       (self_closing_element
+        name: (tag_name)))
+    (element
+      (self_closing_element
+        name: (tag_name)
+        (attribute
+          (attribute_name)
+          (attribute_value
+            (quoted_attribute_value
+              (quoted_attribute_text))))))
+    (element
+      (self_closing_element
         name: (tag_name)
         (attribute
           (attribute_name)
@@ -887,6 +903,26 @@ Void and self-closing elements
             (unquoted_attribute_value
               (riot_expression
                 (riot_expression_text)))))))
+    (element
+      (self_closing_element
+        name: (tag_name)
+        (attribute
+          (attribute_name)
+          (attribute_value
+            (unquoted_attribute_value
+              (riot_expression
+                (riot_expression_text)))))))
+    (element
+      (self_closing_element
+        name: (tag_name)))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name))
+        (riot_expression
+          (riot_expression_text))
+        (end_tag
+          name: (tag_name))))
     (end_tag
       name: (tag_name))))
 

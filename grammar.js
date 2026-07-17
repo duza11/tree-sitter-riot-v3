@@ -93,7 +93,7 @@ module.exports = grammar({
 
     self_closing_element: $ => seq(
       '<',
-      field('name', alias(choice($._start_tag_name, $._void_start_tag_name), $.tag_name)),
+      field('name', alias($._start_tag_name, $.tag_name)),
       repeat($._attribute),
       '/>',
     ),
