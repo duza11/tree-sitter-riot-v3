@@ -40,14 +40,20 @@
 (self_closing_element
   "/>" @indent.end)
 
-(riot_method_definition
-  "{" @indent.begin)
+(script_element) @indent.begin
+
+(script_element
+  (script_end_tag
+    ">" @indent.end))
+
+(riot_method_definition) @indent.begin
 
 (riot_method_definition
-  "}" @indent.end)
+  "}" @indent.branch @indent.end)
 
-; Script/style elements are injected into other languages, so only branch
-; the end tags of template/component elements.
+(script_element
+  (script_end_tag) @indent.branch)
+
 (component
   (end_tag) @indent.branch)
 

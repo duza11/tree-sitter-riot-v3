@@ -1336,11 +1336,14 @@ static bool scan_riot_method_body(TSLexer *lexer) {
             continue;
         }
 
-        consume(lexer);
-        if (!is_space(current)) {
-            has_content = true;
-            can_start_regex = current != ')' && current != ']';
+        if (is_space(current)) {
+            advance_js(lexer, false);
+            continue;
         }
+
+        consume(lexer);
+        has_content = true;
+        can_start_regex = current != ')' && current != ']';
     }
 
     if (!has_content) {
@@ -1441,7 +1444,6 @@ static bool scan_script_javascript_text(
         }
 
         if (lexer->lookahead == '<') {
-            lexer->mark_end(lexer);
             if (scan_expected_end_tag(scanner, lexer)) {
                 if (!has_content) {
                     return false;
@@ -1483,8 +1485,12 @@ static bool scan_script_javascript_text(
             continue;
         }
 
-        consume(lexer);
-        has_content = true;
+        if (is_space(current)) {
+            advance_js(lexer, false);
+        } else {
+            consume(lexer);
+            has_content = true;
+        }
         if (current == '\n' || current == '\r') {
             at_line_start = true;
         } else if (!is_space(current)) {
@@ -1558,7 +1564,6 @@ static bool scan_component_javascript_text(
         }
 
         if (lexer->lookahead == '<') {
-            lexer->mark_end(lexer);
             lexer->advance(lexer, false);
 
             if (lexer->lookahead == '/') {
@@ -1636,12 +1641,15 @@ static bool scan_component_javascript_text(
             continue;
         }
 
-        consume(lexer);
-        has_content = true;
-        if (!is_space(current)) {
+        if (is_space(current)) {
+            advance_js(lexer, false);
+        } else {
+            consume(lexer);
+            has_content = true;
             has_non_space = true;
             at_line_start = false;
-        } else if (current == '\n' || current == '\r') {
+        }
+        if (current == '\n' || current == '\r') {
             at_line_start = true;
         }
     }
