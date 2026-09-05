@@ -1599,6 +1599,7 @@ static bool scan_component_javascript_text(
                 return false;
             }
 
+            lexer->mark_end(lexer);
             has_content = true;
             has_non_space = true;
             at_line_start = false;

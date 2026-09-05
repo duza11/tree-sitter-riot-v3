@@ -1324,6 +1324,22 @@ Riot method definition in open syntax component script
       name: (tag_name))))
 
 ==================
+Incomplete tag-like text does not stall the parser
+==================
+
+P<z}-<
+
+---
+
+(source_file
+  (text)
+  (ERROR
+    (ERROR
+      (tag_name))
+    (tag_name)
+    (raw_text)))
+
+==================
 SCSS style element by type attribute
 ==================
 
