@@ -63,3 +63,16 @@
 (riot_class_string_name) @string
 (riot_class_operator) @punctuation.delimiter
 (riot_class_expression "," @punctuation.delimiter)
+
+; Riot method definitions
+(riot_method_definition
+  name: (riot_method_name) @function.method)
+
+((riot_method_modifier) @keyword.coroutine
+  (#eq? @keyword.coroutine "async"))
+
+((riot_method_modifier) @punctuation.special
+  (#eq? @punctuation.special "*"))
+
+(riot_method_definition
+  ["(" ")" "{" "}"] @punctuation.bracket)

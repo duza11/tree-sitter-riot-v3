@@ -85,6 +85,25 @@
     }
   },
   {
+    "type": "component_script",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "javascript_text",
+          "named": true
+        },
+        {
+          "type": "riot_method_definition",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "css_style_element",
     "named": true,
     "fields": {},
@@ -446,6 +465,71 @@
     }
   },
   {
+    "type": "riot_method_definition",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "riot_method_body",
+            "named": true
+          }
+        ]
+      },
+      "modifier": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "riot_method_modifier",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "riot_method_name",
+            "named": true
+          }
+        ]
+      },
+      "parameters": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "riot_method_parameters",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "script_body",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "javascript_text",
+          "named": true
+        },
+        {
+          "type": "riot_method_definition",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "script_element",
     "named": true,
     "fields": {},
@@ -454,7 +538,7 @@
       "required": true,
       "types": [
         {
-          "type": "raw_text",
+          "type": "script_body",
           "named": true
         },
         {
@@ -750,6 +834,14 @@
     "named": false
   },
   {
+    "type": "(",
+    "named": false
+  },
+  {
+    "type": ")",
+    "named": false
+  },
+  {
     "type": ",",
     "named": false
   },
@@ -782,11 +874,11 @@
     "named": true
   },
   {
-    "type": "component_script",
+    "type": "erroneous_end_tag_name",
     "named": true
   },
   {
-    "type": "erroneous_end_tag_name",
+    "type": "javascript_text",
     "named": true
   },
   {
@@ -827,6 +919,22 @@
   },
   {
     "type": "riot_expression_text",
+    "named": true
+  },
+  {
+    "type": "riot_method_body",
+    "named": true
+  },
+  {
+    "type": "riot_method_modifier",
+    "named": true
+  },
+  {
+    "type": "riot_method_name",
+    "named": true
+  },
+  {
+    "type": "riot_method_parameters",
     "named": true
   },
   {
