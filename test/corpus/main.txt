@@ -946,7 +946,243 @@ Script element
     (script_element
       (script_start_tag
         name: (tag_name))
-      (raw_text)
+      (script_body
+        (javascript_text))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Division before script end tag
+==================
+
+<inline-script>
+  <script>const ratio = total / count</script>
+</inline-script>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (javascript_text))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Riot method definition in script element
+==================
+
+<script-methods>
+  <script>
+    const before = true
+    handleClick(event) {
+      const options = {
+        enabled: true
+      }
+      return options
+    };
+    self.handleRefButton = () => {
+      return before
+    };
+  </script>
+</script-methods>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (javascript_text)
+        (riot_method_definition
+          name: (riot_method_name)
+          parameters: (riot_method_parameters)
+          body: (riot_method_body))
+        (javascript_text))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Riot async and generator method definitions
+==================
+
+<script-method-modifiers>
+  <script>
+    async loadData() {
+      return await fetch('/data')
+    }
+    *items() {
+      yield 1
+    }
+  </script>
+</script-method-modifiers>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (riot_method_definition
+          modifier: (riot_method_modifier)
+          name: (riot_method_name)
+          body: (riot_method_body))
+        (riot_method_definition
+          modifier: (riot_method_modifier)
+          name: (riot_method_name)
+          body: (riot_method_body)))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Riot multiline method signatures
+==================
+
+<multiline-method-signatures>
+  <script>
+    async
+    loadData
+    (source = ')')
+    {
+      return source
+    }
+    *
+    items() {
+      yield 1
+    }
+    $save_1
+    (event) {
+      return event
+    }
+  </script>
+</multiline-method-signatures>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (riot_method_definition
+          modifier: (riot_method_modifier)
+          name: (riot_method_name)
+          parameters: (riot_method_parameters)
+          body: (riot_method_body))
+        (riot_method_definition
+          modifier: (riot_method_modifier)
+          name: (riot_method_name)
+          body: (riot_method_body))
+        (riot_method_definition
+          name: (riot_method_name)
+          parameters: (riot_method_parameters)
+          body: (riot_method_body)))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+JavaScript constructs excluded from Riot methods
+==================
+
+<non-riot-methods>
+  <script>
+    if (ready) {
+      update()
+    }
+    function declared() {
+      return true
+    }
+    self.arrow = () => {
+      return false
+    }
+    invalid((value)) {
+      return value
+    }
+    const string = 'fake() {'
+    const template = `
+      fake() {}
+    `
+    const regex = /fake\(\) \{/
+    // commented() {
+    /*
+      blocked() {
+    */
+  </script>
+</non-riot-methods>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (javascript_text))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Braces in Riot method body
+==================
+
+<method-body-braces>
+  <script>
+    parse(value = ')') {
+      const object = { close: '}' }
+      const regex = /}/
+      const template = `${ { close: '}' } }`
+      // }
+      /* } */
+      return /}/.test(value) ? object : null
+    }
+  </script>
+</method-body-braces>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (riot_method_definition
+          name: (riot_method_name)
+          parameters: (riot_method_parameters)
+          body: (riot_method_body)))
       (script_end_tag
         (tag_name)))
     (end_tag
@@ -995,13 +1231,15 @@ Open syntax component script
           (riot_expression_text))
         (end_tag
           (tag_name))))
-    (component_script)
+    (component_script
+      (javascript_text))
     (end_tag
       (tag_name)))
   (component
     (start_tag
       (tag_name))
-    (component_script)
+    (component_script
+      (javascript_text))
     (end_tag
       (tag_name)))
   (component
@@ -1015,7 +1253,8 @@ Open syntax component script
           (riot_expression_text))
         (end_tag
           (tag_name))))
-    (component_script)
+    (component_script
+      (javascript_text))
     (css_style_element
       (css_style_start_tag
         (tag_name))
@@ -1035,15 +1274,70 @@ Open syntax component script
           (riot_expression_text))
         (end_tag
           (tag_name))))
-    (component_script)
+    (component_script
+      (javascript_text))
     (script_element
       (script_start_tag
         (tag_name))
-      (raw_text)
+      (script_body
+        (javascript_text))
       (script_end_tag
         (tag_name)))
     (end_tag
       (tag_name))))
+
+==================
+Riot method definition in open syntax component script
+==================
+
+<open-syntax-method>
+  <p>{ message }</p>
+  handleClick(event) {
+    return event
+  }
+  self.handleRefButton = () => {
+    return true
+  }
+</open-syntax-method>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name))
+        (riot_expression
+          (riot_expression_text))
+        (end_tag
+          name: (tag_name))))
+    (component_script
+      (riot_method_definition
+        name: (riot_method_name)
+        parameters: (riot_method_parameters)
+        body: (riot_method_body))
+      (javascript_text))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Incomplete tag-like text does not stall the parser
+==================
+
+P<z}-<
+
+---
+
+(source_file
+  (text)
+  (ERROR
+    (ERROR
+      (tag_name))
+    (tag_name)
+    (raw_text)))
 
 ==================
 SCSS style element by type attribute

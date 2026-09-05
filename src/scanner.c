@@ -8,7 +8,12 @@
 
 enum TokenType {
     RAW_TEXT,
-    COMPONENT_SCRIPT,
+    SCRIPT_JAVASCRIPT_TEXT,
+    COMPONENT_JAVASCRIPT_TEXT,
+    RIOT_METHOD_MODIFIER,
+    RIOT_METHOD_NAME,
+    RIOT_METHOD_PARAMETERS,
+    RIOT_METHOD_BODY,
     RIOT_EXPRESSION_TEXT,
     RIOT_EACH_SHORTHAND_EXPRESSION_TEXT,
     RIOT_EACH_COLLECTION_EXPRESSION,
@@ -223,80 +228,131 @@ static inline bool is_riot_class_name_continue(int c) {
         c == '-';
 }
 
-static inline void consume(TSLexer *lexer) {
+static inline void advance_js(TSLexer *lexer, bool mark_end) {
     lexer->advance(lexer, false);
-    lexer->mark_end(lexer);
+    if (mark_end) {
+        lexer->mark_end(lexer);
+    }
 }
 
-static void scan_js_string(TSLexer *lexer, int quote) {
-    consume(lexer);
+static inline void consume(TSLexer *lexer) {
+    advance_js(lexer, true);
+}
+
+static bool scan_js_word_allows_regex(TSLexer *lexer, bool mark_end) {
+    char word[16];
+    unsigned length = 0;
+
+    do {
+        if (length + 1 < sizeof(word)) {
+            word[length++] = (char)lexer->lookahead;
+        }
+        advance_js(lexer, mark_end);
+    } while (is_identifier_continue(lexer->lookahead));
+    word[length] = '\0';
+
+    return
+        strcmp(word, "await") == 0 ||
+        strcmp(word, "case") == 0 ||
+        strcmp(word, "delete") == 0 ||
+        strcmp(word, "do") == 0 ||
+        strcmp(word, "else") == 0 ||
+        strcmp(word, "in") == 0 ||
+        strcmp(word, "instanceof") == 0 ||
+        strcmp(word, "new") == 0 ||
+        strcmp(word, "of") == 0 ||
+        strcmp(word, "return") == 0 ||
+        strcmp(word, "throw") == 0 ||
+        strcmp(word, "typeof") == 0 ||
+        strcmp(word, "void") == 0 ||
+        strcmp(word, "yield") == 0;
+}
+
+static void scan_js_string_with_mark(
+    TSLexer *lexer,
+    int quote,
+    bool mark_end
+) {
+    advance_js(lexer, mark_end);
 
     while (!lexer->eof(lexer)) {
         if (lexer->lookahead == '\\') {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             if (!lexer->eof(lexer)) {
-                consume(lexer);
+                advance_js(lexer, mark_end);
             }
             continue;
         }
 
         int current = lexer->lookahead;
-        consume(lexer);
+        advance_js(lexer, mark_end);
         if (current == quote) {
             return;
         }
     }
 }
 
-static void scan_js_line_comment(TSLexer *lexer) {
+static void scan_js_string(TSLexer *lexer, int quote) {
+    scan_js_string_with_mark(lexer, quote, true);
+}
+
+static void scan_js_line_comment_with_mark(TSLexer *lexer, bool mark_end) {
     while (!lexer->eof(lexer) && lexer->lookahead != '\n' && lexer->lookahead != '\r') {
-        consume(lexer);
+        advance_js(lexer, mark_end);
     }
 }
 
-static void scan_js_block_comment(TSLexer *lexer) {
+static void scan_js_line_comment(TSLexer *lexer) {
+    scan_js_line_comment_with_mark(lexer, true);
+}
+
+static void scan_js_block_comment_with_mark(TSLexer *lexer, bool mark_end) {
     while (!lexer->eof(lexer)) {
         if (lexer->lookahead == '*') {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             if (lexer->lookahead == '/') {
-                consume(lexer);
+                advance_js(lexer, mark_end);
                 return;
             }
             continue;
         }
 
-        consume(lexer);
+        advance_js(lexer, mark_end);
     }
 }
 
-static void scan_js_regex(TSLexer *lexer) {
+static void scan_js_block_comment(TSLexer *lexer) {
+    scan_js_block_comment_with_mark(lexer, true);
+}
+
+static void scan_js_regex_with_mark(TSLexer *lexer, bool mark_end) {
     bool in_character_class = false;
 
     while (!lexer->eof(lexer)) {
         if (lexer->lookahead == '\\') {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             if (!lexer->eof(lexer)) {
-                consume(lexer);
+                advance_js(lexer, mark_end);
             }
             continue;
         }
 
         if (lexer->lookahead == '[') {
             in_character_class = true;
-            consume(lexer);
+            advance_js(lexer, mark_end);
             continue;
         }
 
         if (lexer->lookahead == ']' && in_character_class) {
             in_character_class = false;
-            consume(lexer);
+            advance_js(lexer, mark_end);
             continue;
         }
 
         if (lexer->lookahead == '/' && !in_character_class) {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             while (is_identifier_continue(lexer->lookahead)) {
-                consume(lexer);
+                advance_js(lexer, mark_end);
             }
             return;
         }
@@ -305,13 +361,20 @@ static void scan_js_regex(TSLexer *lexer) {
             return;
         }
 
-        consume(lexer);
+        advance_js(lexer, mark_end);
     }
 }
 
-static void scan_js_template(TSLexer *lexer);
+static void scan_js_regex(TSLexer *lexer) {
+    scan_js_regex_with_mark(lexer, true);
+}
 
-static void scan_js_template_interpolation(TSLexer *lexer) {
+static void scan_js_template_with_mark(TSLexer *lexer, bool mark_end);
+
+static void scan_js_template_interpolation_with_mark(
+    TSLexer *lexer,
+    bool mark_end
+) {
     unsigned depth = 1;
     bool can_start_regex = true;
 
@@ -319,27 +382,27 @@ static void scan_js_template_interpolation(TSLexer *lexer) {
         int current = lexer->lookahead;
 
         if (current == '\'' || current == '"') {
-            scan_js_string(lexer, current);
+            scan_js_string_with_mark(lexer, current, mark_end);
             can_start_regex = false;
             continue;
         }
 
         if (current == '`') {
-            scan_js_template(lexer);
+            scan_js_template_with_mark(lexer, mark_end);
             can_start_regex = false;
             continue;
         }
 
         if (current == '/') {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             if (lexer->lookahead == '/') {
-                consume(lexer);
-                scan_js_line_comment(lexer);
+                advance_js(lexer, mark_end);
+                scan_js_line_comment_with_mark(lexer, mark_end);
             } else if (lexer->lookahead == '*') {
-                consume(lexer);
-                scan_js_block_comment(lexer);
+                advance_js(lexer, mark_end);
+                scan_js_block_comment_with_mark(lexer, mark_end);
             } else if (can_start_regex) {
-                scan_js_regex(lexer);
+                scan_js_regex_with_mark(lexer, mark_end);
                 can_start_regex = false;
             } else {
                 can_start_regex = true;
@@ -349,61 +412,70 @@ static void scan_js_template_interpolation(TSLexer *lexer) {
 
         if (current == '{') {
             depth++;
-            consume(lexer);
+            advance_js(lexer, mark_end);
             can_start_regex = true;
             continue;
         }
 
         if (current == '}') {
             depth--;
-            consume(lexer);
+            advance_js(lexer, mark_end);
             can_start_regex = false;
             continue;
         }
 
-        if (is_identifier_start(current) || (current >= '0' && current <= '9')) {
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, mark_end);
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
             while (is_identifier_continue(lexer->lookahead)) {
-                consume(lexer);
+                advance_js(lexer, mark_end);
             }
             can_start_regex = false;
             continue;
         }
 
-        consume(lexer);
+        advance_js(lexer, mark_end);
         if (!is_space(current)) {
             can_start_regex = current != ')' && current != ']';
         }
     }
 }
 
-static void scan_js_template(TSLexer *lexer) {
-    consume(lexer);
+static void scan_js_template_with_mark(TSLexer *lexer, bool mark_end) {
+    advance_js(lexer, mark_end);
 
     while (!lexer->eof(lexer)) {
         if (lexer->lookahead == '\\') {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             if (!lexer->eof(lexer)) {
-                consume(lexer);
+                advance_js(lexer, mark_end);
             }
             continue;
         }
 
         if (lexer->lookahead == '`') {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             return;
         }
 
         if (lexer->lookahead == '$') {
-            consume(lexer);
+            advance_js(lexer, mark_end);
             if (lexer->lookahead == '{') {
-                consume(lexer);
-                scan_js_template_interpolation(lexer);
+                advance_js(lexer, mark_end);
+                scan_js_template_interpolation_with_mark(lexer, mark_end);
             }
             continue;
         }
 
-        consume(lexer);
+        advance_js(lexer, mark_end);
     }
+}
+
+static void scan_js_template(TSLexer *lexer) {
+    scan_js_template_with_mark(lexer, true);
 }
 
 static bool scan_riot_expression_text(
@@ -535,7 +607,13 @@ static bool scan_riot_expression_text(
             continue;
         }
 
-        if (is_identifier_start(current) || (current >= '0' && current <= '9')) {
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, true);
+            has_content = true;
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
             while (is_identifier_continue(lexer->lookahead)) {
                 consume(lexer);
             }
@@ -740,7 +818,13 @@ static bool scan_riot_class_condition(TSLexer *lexer) {
             continue;
         }
 
-        if (is_identifier_start(current) || (current >= '0' && current <= '9')) {
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, true);
+            has_content = true;
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
             while (is_identifier_continue(lexer->lookahead)) {
                 consume(lexer);
             }
@@ -873,6 +957,400 @@ static bool scan_expected_end_tag(Scanner *scanner, TSLexer *lexer) {
     return !is_name_char(lexer->lookahead);
 }
 
+typedef enum {
+    NO_RIOT_METHOD_TOKEN,
+    RIOT_METHOD_MODIFIER_TOKEN,
+    RIOT_METHOD_NAME_TOKEN,
+} RiotMethodToken;
+
+static inline void advance_lookahead(TSLexer *lexer) {
+    advance_js(lexer, false);
+}
+
+static void skip_js_string_lookahead(TSLexer *lexer, int quote) {
+    scan_js_string_with_mark(lexer, quote, false);
+}
+
+static void skip_js_line_comment_lookahead(TSLexer *lexer) {
+    scan_js_line_comment_with_mark(lexer, false);
+}
+
+static void skip_js_block_comment_lookahead(TSLexer *lexer) {
+    scan_js_block_comment_with_mark(lexer, false);
+}
+
+static void skip_js_regex_lookahead(TSLexer *lexer) {
+    scan_js_regex_with_mark(lexer, false);
+}
+
+static void skip_js_template_lookahead(TSLexer *lexer) {
+    scan_js_template_with_mark(lexer, false);
+}
+
+static void skip_js_spaces_lookahead(TSLexer *lexer) {
+    while (!lexer->eof(lexer) && is_space(lexer->lookahead)) {
+        advance_lookahead(lexer);
+    }
+}
+
+static bool scan_identifier_lookahead(
+    TSLexer *lexer,
+    char *name,
+    unsigned capacity,
+    bool mark_token
+) {
+    if (!is_identifier_start(lexer->lookahead)) {
+        return false;
+    }
+
+    unsigned length = 0;
+    do {
+        if (length + 1 < capacity) {
+            name[length++] = (char)lexer->lookahead;
+        }
+        advance_lookahead(lexer);
+        if (mark_token) {
+            lexer->mark_end(lexer);
+        }
+    } while (is_identifier_continue(lexer->lookahead));
+    name[length] = '\0';
+    return true;
+}
+
+static bool is_riot_method_keyword(const char *name) {
+    return
+        strcmp(name, "if") == 0 ||
+        strcmp(name, "while") == 0 ||
+        strcmp(name, "for") == 0 ||
+        strcmp(name, "switch") == 0 ||
+        strcmp(name, "catch") == 0 ||
+        strcmp(name, "function") == 0;
+}
+
+static bool scan_riot_method_parameters_lookahead(TSLexer *lexer) {
+    bool can_start_regex = true;
+
+    if (lexer->lookahead != '(') {
+        return false;
+    }
+    advance_lookahead(lexer);
+
+    while (!lexer->eof(lexer) && lexer->lookahead != ')') {
+        int current = lexer->lookahead;
+
+        if (current == '(') {
+            return false;
+        }
+
+        if (current == '\'' || current == '"') {
+            skip_js_string_lookahead(lexer, current);
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '`') {
+            skip_js_template_lookahead(lexer);
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '/') {
+            advance_lookahead(lexer);
+            if (lexer->lookahead == '/') {
+                advance_lookahead(lexer);
+                skip_js_line_comment_lookahead(lexer);
+            } else if (lexer->lookahead == '*') {
+                advance_lookahead(lexer);
+                skip_js_block_comment_lookahead(lexer);
+            } else if (can_start_regex) {
+                skip_js_regex_lookahead(lexer);
+                can_start_regex = false;
+            } else {
+                can_start_regex = true;
+            }
+            continue;
+        }
+
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, false);
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
+            while (is_identifier_continue(lexer->lookahead)) {
+                advance_lookahead(lexer);
+            }
+            can_start_regex = false;
+            continue;
+        }
+
+        advance_lookahead(lexer);
+        if (!is_space(current)) {
+            can_start_regex = current != ']';
+        }
+    }
+
+    if (lexer->lookahead != ')') {
+        return false;
+    }
+    advance_lookahead(lexer);
+    skip_js_spaces_lookahead(lexer);
+    return lexer->lookahead == '{';
+}
+
+// Mirrors the Riot v3 compiler's JS_ES6SIGN method detection.
+static RiotMethodToken scan_riot_method_candidate(
+    TSLexer *lexer,
+    bool allow_modifier,
+    bool mark_token
+) {
+    char name[16];
+
+    if (lexer->lookahead == '*') {
+        if (!allow_modifier) {
+            return NO_RIOT_METHOD_TOKEN;
+        }
+
+        advance_lookahead(lexer);
+        if (mark_token) {
+            lexer->mark_end(lexer);
+        }
+        skip_js_spaces_lookahead(lexer);
+        if (!scan_identifier_lookahead(lexer, name, sizeof(name), false) ||
+            is_riot_method_keyword(name)
+        ) {
+            return NO_RIOT_METHOD_TOKEN;
+        }
+        skip_js_spaces_lookahead(lexer);
+        return scan_riot_method_parameters_lookahead(lexer)
+            ? RIOT_METHOD_MODIFIER_TOKEN
+            : NO_RIOT_METHOD_TOKEN;
+    }
+
+    if (!scan_identifier_lookahead(lexer, name, sizeof(name), mark_token)) {
+        return NO_RIOT_METHOD_TOKEN;
+    }
+
+    bool is_async = strcmp(name, "async") == 0;
+    skip_js_spaces_lookahead(lexer);
+
+    if (allow_modifier && is_async && is_identifier_start(lexer->lookahead)) {
+        char method_name[16];
+        if (!scan_identifier_lookahead(
+                lexer,
+                method_name,
+                sizeof(method_name),
+                false
+            ) ||
+            is_riot_method_keyword(method_name)
+        ) {
+            return NO_RIOT_METHOD_TOKEN;
+        }
+        skip_js_spaces_lookahead(lexer);
+        return scan_riot_method_parameters_lookahead(lexer)
+            ? RIOT_METHOD_MODIFIER_TOKEN
+            : NO_RIOT_METHOD_TOKEN;
+    }
+
+    if (is_riot_method_keyword(name)) {
+        return NO_RIOT_METHOD_TOKEN;
+    }
+
+    return scan_riot_method_parameters_lookahead(lexer)
+        ? RIOT_METHOD_NAME_TOKEN
+        : NO_RIOT_METHOD_TOKEN;
+}
+
+static bool emit_riot_method_token(
+    TSLexer *lexer,
+    const bool *valid_symbols,
+    bool allow_modifier
+) {
+    while (
+        allow_modifier
+            ? lexer->lookahead == ' ' || lexer->lookahead == '\t'
+            : is_space(lexer->lookahead)
+    ) {
+        lexer->advance(lexer, true);
+    }
+
+    RiotMethodToken token = scan_riot_method_candidate(
+        lexer,
+        allow_modifier,
+        true
+    );
+    if (token == RIOT_METHOD_MODIFIER_TOKEN &&
+        valid_symbols[RIOT_METHOD_MODIFIER]
+    ) {
+        lexer->result_symbol = RIOT_METHOD_MODIFIER;
+        return true;
+    }
+    if (token == RIOT_METHOD_NAME_TOKEN && valid_symbols[RIOT_METHOD_NAME]) {
+        lexer->result_symbol = RIOT_METHOD_NAME;
+        return true;
+    }
+    return false;
+}
+
+static bool scan_riot_method_parameters(TSLexer *lexer) {
+    bool has_content = false;
+    bool can_start_regex = true;
+
+    while (!lexer->eof(lexer) && lexer->lookahead != ')') {
+        int current = lexer->lookahead;
+
+        if (current == '\'' || current == '"') {
+            scan_js_string(lexer, current);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '`') {
+            scan_js_template(lexer);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '/') {
+            consume(lexer);
+            has_content = true;
+            if (lexer->lookahead == '/') {
+                consume(lexer);
+                scan_js_line_comment(lexer);
+            } else if (lexer->lookahead == '*') {
+                consume(lexer);
+                scan_js_block_comment(lexer);
+            } else if (can_start_regex) {
+                scan_js_regex(lexer);
+                can_start_regex = false;
+            } else {
+                can_start_regex = true;
+            }
+            continue;
+        }
+
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, true);
+            has_content = true;
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
+            while (is_identifier_continue(lexer->lookahead)) {
+                consume(lexer);
+            }
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        consume(lexer);
+        if (!is_space(current)) {
+            has_content = true;
+            can_start_regex = current != ']';
+        }
+    }
+
+    if (!has_content) {
+        return false;
+    }
+
+    lexer->result_symbol = RIOT_METHOD_PARAMETERS;
+    return true;
+}
+
+static bool scan_riot_method_body(TSLexer *lexer) {
+    unsigned brace_depth = 0;
+    bool has_content = false;
+    bool can_start_regex = true;
+
+    while (!lexer->eof(lexer)) {
+        int current = lexer->lookahead;
+
+        if (current == '}' && brace_depth == 0) {
+            break;
+        }
+
+        if (current == '\'' || current == '"') {
+            scan_js_string(lexer, current);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '`') {
+            scan_js_template(lexer);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (current == '/') {
+            consume(lexer);
+            has_content = true;
+            if (lexer->lookahead == '/') {
+                consume(lexer);
+                scan_js_line_comment(lexer);
+            } else if (lexer->lookahead == '*') {
+                consume(lexer);
+                scan_js_block_comment(lexer);
+            } else if (can_start_regex) {
+                scan_js_regex(lexer);
+                can_start_regex = false;
+            } else {
+                can_start_regex = true;
+            }
+            continue;
+        }
+
+        if (current == '{') {
+            brace_depth++;
+            consume(lexer);
+            has_content = true;
+            can_start_regex = true;
+            continue;
+        }
+
+        if (current == '}') {
+            brace_depth--;
+            consume(lexer);
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, true);
+            has_content = true;
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
+            while (is_identifier_continue(lexer->lookahead)) {
+                consume(lexer);
+            }
+            has_content = true;
+            can_start_regex = false;
+            continue;
+        }
+
+        consume(lexer);
+        if (!is_space(current)) {
+            has_content = true;
+            can_start_regex = current != ')' && current != ']';
+        }
+    }
+
+    if (!has_content) {
+        return false;
+    }
+
+    lexer->result_symbol = RIOT_METHOD_BODY;
+    return true;
+}
+
 static bool scan_raw_text(Scanner *scanner, TSLexer *lexer) {
     bool has_content = false;
 
@@ -906,11 +1384,179 @@ static bool scan_raw_text(Scanner *scanner, TSLexer *lexer) {
     return true;
 }
 
-static bool scan_component_script(TSLexer *lexer) {
+static bool scan_script_javascript_text(
+    Scanner *scanner,
+    TSLexer *lexer,
+    const bool *valid_symbols
+) {
     bool has_content = false;
-    bool has_non_space = false;
+    bool at_line_start = lexer->get_column(lexer) == 0;
+
+    while (!lexer->eof(lexer) && is_space(lexer->lookahead)) {
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            at_line_start = true;
+        }
+        lexer->advance(lexer, true);
+    }
 
     while (!lexer->eof(lexer)) {
+        if (at_line_start) {
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+                lexer->advance(lexer, !has_content);
+            }
+
+            if (
+                is_identifier_start(lexer->lookahead) ||
+                lexer->lookahead == '*'
+            ) {
+                RiotMethodToken method = scan_riot_method_candidate(
+                    lexer,
+                    valid_symbols[RIOT_METHOD_MODIFIER],
+                    !has_content
+                );
+                if (method != NO_RIOT_METHOD_TOKEN) {
+                    if (has_content) {
+                        lexer->result_symbol = SCRIPT_JAVASCRIPT_TEXT;
+                        return true;
+                    }
+                    if (method == RIOT_METHOD_MODIFIER_TOKEN &&
+                        valid_symbols[RIOT_METHOD_MODIFIER]
+                    ) {
+                        lexer->result_symbol = RIOT_METHOD_MODIFIER;
+                        return true;
+                    }
+                    if (method == RIOT_METHOD_NAME_TOKEN &&
+                        valid_symbols[RIOT_METHOD_NAME]
+                    ) {
+                        lexer->result_symbol = RIOT_METHOD_NAME;
+                        return true;
+                    }
+                    return false;
+                }
+
+                lexer->mark_end(lexer);
+                has_content = true;
+                at_line_start = lexer->get_column(lexer) == 0;
+            }
+        }
+
+        if (lexer->lookahead == '<') {
+            lexer->mark_end(lexer);
+            if (scan_expected_end_tag(scanner, lexer)) {
+                if (!has_content) {
+                    return false;
+                }
+                lexer->result_symbol = SCRIPT_JAVASCRIPT_TEXT;
+                return true;
+            }
+
+            lexer->mark_end(lexer);
+            has_content = true;
+            at_line_start = false;
+            continue;
+        }
+
+        int current = lexer->lookahead;
+        if (current == '\'' || current == '"') {
+            scan_js_string(lexer, current);
+            has_content = true;
+            at_line_start = false;
+            continue;
+        }
+        if (current == '`') {
+            scan_js_template(lexer);
+            has_content = true;
+            at_line_start = false;
+            continue;
+        }
+        if (current == '/') {
+            consume(lexer);
+            has_content = true;
+            if (lexer->lookahead == '/') {
+                consume(lexer);
+                scan_js_line_comment(lexer);
+            } else if (lexer->lookahead == '*') {
+                consume(lexer);
+                scan_js_block_comment(lexer);
+            }
+            at_line_start = false;
+            continue;
+        }
+
+        consume(lexer);
+        has_content = true;
+        if (current == '\n' || current == '\r') {
+            at_line_start = true;
+        } else if (!is_space(current)) {
+            at_line_start = false;
+        }
+    }
+
+    if (!has_content) {
+        return false;
+    }
+
+    lexer->result_symbol = SCRIPT_JAVASCRIPT_TEXT;
+    return true;
+}
+
+static bool scan_component_javascript_text(
+    TSLexer *lexer,
+    const bool *valid_symbols
+) {
+    bool has_content = false;
+    bool has_non_space = false;
+    bool at_line_start = lexer->get_column(lexer) == 0;
+
+    while (!lexer->eof(lexer) && is_space(lexer->lookahead)) {
+        if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+            at_line_start = true;
+        }
+        lexer->advance(lexer, true);
+    }
+
+    while (!lexer->eof(lexer)) {
+        if (at_line_start) {
+            while (lexer->lookahead == ' ' || lexer->lookahead == '\t') {
+                lexer->advance(lexer, !has_non_space);
+            }
+
+            if (
+                is_identifier_start(lexer->lookahead) ||
+                lexer->lookahead == '*'
+            ) {
+                RiotMethodToken method = scan_riot_method_candidate(
+                    lexer,
+                    valid_symbols[RIOT_METHOD_MODIFIER],
+                    !has_non_space
+                );
+                if (method != NO_RIOT_METHOD_TOKEN) {
+                    if (has_non_space) {
+                        lexer->result_symbol = COMPONENT_JAVASCRIPT_TEXT;
+                        return true;
+                    }
+                    if (method == RIOT_METHOD_MODIFIER_TOKEN &&
+                        valid_symbols[RIOT_METHOD_MODIFIER]
+                    ) {
+                        lexer->result_symbol = RIOT_METHOD_MODIFIER;
+                        return true;
+                    }
+                    if (method == RIOT_METHOD_NAME_TOKEN &&
+                        valid_symbols[RIOT_METHOD_NAME]
+                    ) {
+                        lexer->result_symbol = RIOT_METHOD_NAME;
+                        return true;
+                    }
+                    return false;
+                }
+
+                lexer->mark_end(lexer);
+                has_content = true;
+                has_non_space = true;
+                at_line_start = lexer->get_column(lexer) == 0;
+            }
+        }
+
         if (lexer->lookahead == '<') {
             lexer->mark_end(lexer);
             lexer->advance(lexer, false);
@@ -919,7 +1565,7 @@ static bool scan_component_script(TSLexer *lexer) {
                 if (!has_non_space) {
                     return false;
                 }
-                lexer->result_symbol = COMPONENT_SCRIPT;
+                lexer->result_symbol = COMPONENT_JAVASCRIPT_TEXT;
                 return true;
             }
 
@@ -940,7 +1586,7 @@ static bool scan_component_script(TSLexer *lexer) {
                     strcmp(name, "script") == 0 ||
                     strcmp(name, "style") == 0
                 ) {
-                    lexer->result_symbol = COMPONENT_SCRIPT;
+                    lexer->result_symbol = COMPONENT_JAVASCRIPT_TEXT;
                     return true;
                 }
             }
@@ -953,24 +1599,58 @@ static bool scan_component_script(TSLexer *lexer) {
                 return false;
             }
 
+            lexer->mark_end(lexer);
             has_content = true;
             has_non_space = true;
+            at_line_start = false;
             continue;
         }
 
-        if (!is_space(lexer->lookahead)) {
+        int current = lexer->lookahead;
+        if (current == '\'' || current == '"') {
+            scan_js_string(lexer, current);
+            has_content = true;
             has_non_space = true;
+            at_line_start = false;
+            continue;
         }
-        lexer->advance(lexer, false);
-        lexer->mark_end(lexer);
+        if (current == '`') {
+            scan_js_template(lexer);
+            has_content = true;
+            has_non_space = true;
+            at_line_start = false;
+            continue;
+        }
+        if (current == '/') {
+            consume(lexer);
+            has_content = true;
+            has_non_space = true;
+            if (lexer->lookahead == '/') {
+                consume(lexer);
+                scan_js_line_comment(lexer);
+            } else if (lexer->lookahead == '*') {
+                consume(lexer);
+                scan_js_block_comment(lexer);
+            }
+            at_line_start = false;
+            continue;
+        }
+
+        consume(lexer);
         has_content = true;
+        if (!is_space(current)) {
+            has_non_space = true;
+            at_line_start = false;
+        } else if (current == '\n' || current == '\r') {
+            at_line_start = true;
+        }
     }
 
     if (!has_content || !has_non_space) {
         return false;
     }
 
-    lexer->result_symbol = COMPONENT_SCRIPT;
+    lexer->result_symbol = COMPONENT_JAVASCRIPT_TEXT;
     return true;
 }
 
@@ -1391,8 +2071,31 @@ bool tree_sitter_riot_v3_external_scanner_scan(
         return scan_raw_text(scanner, lexer);
     }
 
-    if (valid_symbols[COMPONENT_SCRIPT]) {
-        return scan_component_script(lexer);
+    if (valid_symbols[RIOT_METHOD_PARAMETERS]) {
+        return scan_riot_method_parameters(lexer);
+    }
+
+    if (valid_symbols[RIOT_METHOD_BODY]) {
+        return scan_riot_method_body(lexer);
+    }
+
+    if (valid_symbols[SCRIPT_JAVASCRIPT_TEXT]) {
+        return scan_script_javascript_text(scanner, lexer, valid_symbols);
+    }
+
+    if (valid_symbols[COMPONENT_JAVASCRIPT_TEXT]) {
+        return scan_component_javascript_text(lexer, valid_symbols);
+    }
+
+    if (
+        valid_symbols[RIOT_METHOD_MODIFIER] ||
+        valid_symbols[RIOT_METHOD_NAME]
+    ) {
+        return emit_riot_method_token(
+            lexer,
+            valid_symbols,
+            valid_symbols[RIOT_METHOD_MODIFIER]
+        );
     }
 
     if (

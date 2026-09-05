@@ -1,9 +1,10 @@
-(script_element
-  (raw_text) @injection.content
+((javascript_text) @injection.content
   (#set! injection.language "javascript"))
 
-(component
-  (component_script) @injection.content
+((riot_method_parameters) @injection.content
+  (#set! injection.language "javascript"))
+
+((riot_method_body) @injection.content
   (#set! injection.language "javascript"))
 
 (scss_style_element

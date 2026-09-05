@@ -18,7 +18,12 @@ module.exports = grammar({
 
   externals: $ => [
     $.raw_text,
-    $.component_script,
+    $._script_javascript_text,
+    $._component_javascript_text,
+    $.riot_method_modifier,
+    $.riot_method_name,
+    $.riot_method_parameters,
+    $.riot_method_body,
     $.riot_expression_text,
     $._riot_each_shorthand_expression_text,
     $.riot_each_collection_expression,
@@ -55,6 +60,11 @@ module.exports = grammar({
       )),
       $.end_tag,
     ),
+
+    component_script: $ => prec(-1, repeat1(choice(
+      alias($._component_javascript_text, $.javascript_text),
+      $.riot_method_definition,
+    ))),
 
     _component_child: $ => choice(
       $.script_element,
@@ -126,8 +136,24 @@ module.exports = grammar({
 
     script_element: $ => seq(
       $.script_start_tag,
-      optional($.raw_text),
+      optional($.script_body),
       $.script_end_tag,
+    ),
+
+    script_body: $ => repeat1(choice(
+      alias($._script_javascript_text, $.javascript_text),
+      $.riot_method_definition,
+    )),
+
+    riot_method_definition: $ => seq(
+      optional(field('modifier', $.riot_method_modifier)),
+      field('name', $.riot_method_name),
+      '(',
+      optional(field('parameters', $.riot_method_parameters)),
+      ')',
+      '{',
+      optional(field('body', $.riot_method_body)),
+      '}',
     ),
 
     script_start_tag: $ => seq(
