@@ -239,18 +239,7 @@ static inline void consume(TSLexer *lexer) {
     advance_js(lexer, true);
 }
 
-static bool scan_js_word_allows_regex(TSLexer *lexer, bool mark_end) {
-    char word[16];
-    unsigned length = 0;
-
-    do {
-        if (length + 1 < sizeof(word)) {
-            word[length++] = (char)lexer->lookahead;
-        }
-        advance_js(lexer, mark_end);
-    } while (is_identifier_continue(lexer->lookahead));
-    word[length] = '\0';
-
+static bool js_word_allows_regex(const char *word) {
     return
         strcmp(word, "await") == 0 ||
         strcmp(word, "case") == 0 ||
@@ -266,6 +255,21 @@ static bool scan_js_word_allows_regex(TSLexer *lexer, bool mark_end) {
         strcmp(word, "typeof") == 0 ||
         strcmp(word, "void") == 0 ||
         strcmp(word, "yield") == 0;
+}
+
+static bool scan_js_word_allows_regex(TSLexer *lexer, bool mark_end) {
+    char word[16];
+    unsigned length = 0;
+
+    do {
+        if (length + 1 < sizeof(word)) {
+            word[length++] = (char)lexer->lookahead;
+        }
+        advance_js(lexer, mark_end);
+    } while (is_identifier_continue(lexer->lookahead));
+    word[length] = '\0';
+
+    return js_word_allows_regex(word);
 }
 
 static void scan_js_string_with_mark(
@@ -1102,9 +1106,14 @@ static bool scan_riot_method_parameters_lookahead(TSLexer *lexer) {
 static RiotMethodToken scan_riot_method_candidate(
     TSLexer *lexer,
     bool allow_modifier,
-    bool mark_token
+    bool mark_token,
+    bool *can_start_regex_after
 ) {
     char name[16];
+
+    if (can_start_regex_after) {
+        *can_start_regex_after = false;
+    }
 
     if (lexer->lookahead == '*') {
         if (!allow_modifier) {
@@ -1131,6 +1140,10 @@ static RiotMethodToken scan_riot_method_candidate(
         return NO_RIOT_METHOD_TOKEN;
     }
 
+    if (can_start_regex_after) {
+        *can_start_regex_after = js_word_allows_regex(name);
+    }
+
     bool is_async = strcmp(name, "async") == 0;
     skip_js_spaces_lookahead(lexer);
 
@@ -1147,18 +1160,26 @@ static RiotMethodToken scan_riot_method_candidate(
             return NO_RIOT_METHOD_TOKEN;
         }
         skip_js_spaces_lookahead(lexer);
-        return scan_riot_method_parameters_lookahead(lexer)
-            ? RIOT_METHOD_MODIFIER_TOKEN
-            : NO_RIOT_METHOD_TOKEN;
+        bool is_method = scan_riot_method_parameters_lookahead(lexer);
+        if (!is_method && can_start_regex_after) {
+            *can_start_regex_after = false;
+        }
+        return is_method ? RIOT_METHOD_MODIFIER_TOKEN : NO_RIOT_METHOD_TOKEN;
     }
 
     if (is_riot_method_keyword(name)) {
         return NO_RIOT_METHOD_TOKEN;
     }
 
-    return scan_riot_method_parameters_lookahead(lexer)
-        ? RIOT_METHOD_NAME_TOKEN
-        : NO_RIOT_METHOD_TOKEN;
+    if (lexer->lookahead != '(') {
+        return NO_RIOT_METHOD_TOKEN;
+    }
+
+    bool is_method = scan_riot_method_parameters_lookahead(lexer);
+    if (!is_method && can_start_regex_after) {
+        *can_start_regex_after = false;
+    }
+    return is_method ? RIOT_METHOD_NAME_TOKEN : NO_RIOT_METHOD_TOKEN;
 }
 
 static bool emit_riot_method_token(
@@ -1177,7 +1198,8 @@ static bool emit_riot_method_token(
     RiotMethodToken token = scan_riot_method_candidate(
         lexer,
         allow_modifier,
-        true
+        true,
+        NULL
     );
     if (token == RIOT_METHOD_MODIFIER_TOKEN &&
         valid_symbols[RIOT_METHOD_MODIFIER]
@@ -1394,6 +1416,7 @@ static bool scan_script_javascript_text(
 ) {
     bool has_content = false;
     bool at_line_start = lexer->get_column(lexer) == 0;
+    bool can_start_regex = true;
 
     while (!lexer->eof(lexer) && is_space(lexer->lookahead)) {
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
@@ -1412,10 +1435,12 @@ static bool scan_script_javascript_text(
                 is_identifier_start(lexer->lookahead) ||
                 lexer->lookahead == '*'
             ) {
+                bool can_start_regex_after = false;
                 RiotMethodToken method = scan_riot_method_candidate(
                     lexer,
                     valid_symbols[RIOT_METHOD_MODIFIER],
-                    !has_content
+                    !has_content,
+                    &can_start_regex_after
                 );
                 if (method != NO_RIOT_METHOD_TOKEN) {
                     if (has_content) {
@@ -1437,6 +1462,7 @@ static bool scan_script_javascript_text(
                     return false;
                 }
 
+                can_start_regex = can_start_regex_after;
                 lexer->mark_end(lexer);
                 has_content = true;
                 at_line_start = lexer->get_column(lexer) == 0;
@@ -1455,6 +1481,7 @@ static bool scan_script_javascript_text(
             lexer->mark_end(lexer);
             has_content = true;
             at_line_start = false;
+            can_start_regex = true;
             continue;
         }
 
@@ -1463,12 +1490,14 @@ static bool scan_script_javascript_text(
             scan_js_string(lexer, current);
             has_content = true;
             at_line_start = false;
+            can_start_regex = false;
             continue;
         }
         if (current == '`') {
             scan_js_template(lexer);
             has_content = true;
             at_line_start = false;
+            can_start_regex = false;
             continue;
         }
         if (current == '/') {
@@ -1480,8 +1509,30 @@ static bool scan_script_javascript_text(
             } else if (lexer->lookahead == '*') {
                 consume(lexer);
                 scan_js_block_comment(lexer);
+            } else if (can_start_regex) {
+                scan_js_regex(lexer);
+                can_start_regex = false;
+            } else {
+                can_start_regex = true;
             }
             at_line_start = false;
+            continue;
+        }
+
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, true);
+            has_content = true;
+            at_line_start = false;
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
+            while (is_identifier_continue(lexer->lookahead)) {
+                consume(lexer);
+            }
+            has_content = true;
+            at_line_start = false;
+            can_start_regex = false;
             continue;
         }
 
@@ -1490,6 +1541,7 @@ static bool scan_script_javascript_text(
         } else {
             consume(lexer);
             has_content = true;
+            can_start_regex = current != ')' && current != ']';
         }
         if (current == '\n' || current == '\r') {
             at_line_start = true;
@@ -1513,6 +1565,7 @@ static bool scan_component_javascript_text(
     bool has_content = false;
     bool has_non_space = false;
     bool at_line_start = lexer->get_column(lexer) == 0;
+    bool can_start_regex = true;
 
     while (!lexer->eof(lexer) && is_space(lexer->lookahead)) {
         if (lexer->lookahead == '\n' || lexer->lookahead == '\r') {
@@ -1531,10 +1584,12 @@ static bool scan_component_javascript_text(
                 is_identifier_start(lexer->lookahead) ||
                 lexer->lookahead == '*'
             ) {
+                bool can_start_regex_after = false;
                 RiotMethodToken method = scan_riot_method_candidate(
                     lexer,
                     valid_symbols[RIOT_METHOD_MODIFIER],
-                    !has_non_space
+                    !has_non_space,
+                    &can_start_regex_after
                 );
                 if (method != NO_RIOT_METHOD_TOKEN) {
                     if (has_non_space) {
@@ -1556,6 +1611,7 @@ static bool scan_component_javascript_text(
                     return false;
                 }
 
+                can_start_regex = can_start_regex_after;
                 lexer->mark_end(lexer);
                 has_content = true;
                 has_non_space = true;
@@ -1608,6 +1664,7 @@ static bool scan_component_javascript_text(
             has_content = true;
             has_non_space = true;
             at_line_start = false;
+            can_start_regex = true;
             continue;
         }
 
@@ -1617,6 +1674,7 @@ static bool scan_component_javascript_text(
             has_content = true;
             has_non_space = true;
             at_line_start = false;
+            can_start_regex = false;
             continue;
         }
         if (current == '`') {
@@ -1624,6 +1682,7 @@ static bool scan_component_javascript_text(
             has_content = true;
             has_non_space = true;
             at_line_start = false;
+            can_start_regex = false;
             continue;
         }
         if (current == '/') {
@@ -1636,8 +1695,32 @@ static bool scan_component_javascript_text(
             } else if (lexer->lookahead == '*') {
                 consume(lexer);
                 scan_js_block_comment(lexer);
+            } else if (can_start_regex) {
+                scan_js_regex(lexer);
+                can_start_regex = false;
+            } else {
+                can_start_regex = true;
             }
             at_line_start = false;
+            continue;
+        }
+
+        if (is_identifier_start(current)) {
+            can_start_regex = scan_js_word_allows_regex(lexer, true);
+            has_content = true;
+            has_non_space = true;
+            at_line_start = false;
+            continue;
+        }
+
+        if (current >= '0' && current <= '9') {
+            while (is_identifier_continue(lexer->lookahead)) {
+                consume(lexer);
+            }
+            has_content = true;
+            has_non_space = true;
+            at_line_start = false;
+            can_start_regex = false;
             continue;
         }
 
@@ -1648,6 +1731,7 @@ static bool scan_component_javascript_text(
             has_content = true;
             has_non_space = true;
             at_line_start = false;
+            can_start_regex = current != ')' && current != ']';
         }
         if (current == '\n' || current == '\r') {
             at_line_start = true;

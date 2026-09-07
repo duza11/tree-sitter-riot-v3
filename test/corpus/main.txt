@@ -978,6 +978,89 @@ Division before script end tag
       name: (tag_name))))
 
 ==================
+Regular expression literals in script elements
+==================
+
+<regex-script>
+  <script>
+    const quoted = /["'`]+/
+    const escaped = /^[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+$/
+    function matches(value) {
+      return /["'`]+/giu.test(value)
+    }
+  </script>
+</regex-script>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (javascript_text))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Comment-like sequences in script regular expressions
+==================
+
+<comment-like-regex>
+  <script>
+    const delimiters = /[/*]+/
+  </script>
+</comment-like-regex>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (script_element
+      (script_start_tag
+        name: (tag_name))
+      (script_body
+        (javascript_text))
+      (script_end_tag
+        (tag_name)))
+    (end_tag
+      name: (tag_name))))
+
+==================
+Regular expression literals in open syntax component script
+==================
+
+<open-regex>
+  <p>Hello</p>
+  self.pattern = /[_']+$/
+</open-regex>
+
+---
+
+(source_file
+  (component
+    (start_tag
+      name: (tag_name))
+    (element
+      (normal_element
+        (start_tag
+          name: (tag_name))
+        (text)
+        (end_tag
+          name: (tag_name))))
+    (component_script
+      (javascript_text))
+    (end_tag
+      name: (tag_name))))
+
+==================
 Riot method definition in script element
 ==================
 
