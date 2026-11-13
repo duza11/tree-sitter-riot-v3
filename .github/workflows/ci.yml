@@ -60,7 +60,7 @@ jobs:
         with:
           tree-sitter-ref: v0.26.9
       - name: Run tests
-        uses: tree-sitter/parser-test-action@05f6ce7c7e54603c45cd87ed926725dc870bcc63
+        uses: tree-sitter/parser-test-action@d5403e07ecfd518d4845f2a366d9d2bd40b9bd0a
         with:
           abi-version: 14
           test-rust: true
